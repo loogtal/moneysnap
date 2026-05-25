@@ -3,7 +3,8 @@
     "name": "MoneySnap",
     "slug": "moneysnap",
     "version": "1.0.0",
-    "sdkVersion": "54.0.0",
+    "sdkVersion": "56.0.0",
+    "scheme": "moneysnap",
     "platforms": [
       "ios",
       "android"
@@ -18,16 +19,19 @@
       }
     },
     "android": {
-      "package": "com.liserosaliz.moneysnap"
+      "package": "com.liserosaliz.moneysnap",
+      "googleServicesFile": "./google-services.json"
     },
     "ios": {
       "bundleIdentifier": "com.liserosaliz.moneysnap",
+      "usesAppleSignIn": true,
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
     },
     "plugins": [
-      "expo-web-browser"
+      "expo-web-browser",
+      "expo-apple-authentication"
     ]
   }
 }
