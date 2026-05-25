@@ -64,6 +64,8 @@ export const TR = {
     googleNotReadyMsg: "ฟีเจอร์นี้ต้องตั้งค่า Google OAuth ก่อน\nกรุณาใช้งานโดยไม่ลงทะเบียนไปก่อน",
     googleFetchFail: "ไม่สามารถดึงข้อมูล Google ได้",
     appleSignInFail: "Apple Sign In ไม่สำเร็จ",
+    signingIn: "กำลังเข้าสู่ระบบ...",
+    loginFailed: "เข้าสู่ระบบไม่สำเร็จ โปรดลองอีกครั้ง",
     // Errors
     error: "ข้อผิดพลาด", loadFailed: "โหลดข้อมูลไม่สำเร็จ",
     saveFailed: "บันทึกไม่สำเร็จ โปรดลองอีกครั้ง",
@@ -138,6 +140,8 @@ export const TR = {
     googleNotReadyMsg: "This feature requires Google OAuth setup.\nPlease continue as guest for now.",
     googleFetchFail: "Could not fetch Google profile",
     appleSignInFail: "Apple Sign In failed",
+    signingIn: "Signing in...",
+    loginFailed: "Sign in failed. Please try again.",
     // Errors
     error: "Error", loadFailed: "Failed to load data",
     saveFailed: "Save failed. Please try again",

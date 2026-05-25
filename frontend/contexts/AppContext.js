@@ -1,7 +1,9 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useRef } from "react";
 import { useColorScheme, View, ActivityIndicator } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import axios from "axios";
 import { TR } from "../translations";
+import { API_BASE_URL } from "../config";
 
 const LIGHT = {
   bg: "#ffffff", surface: "#f8f9ff", card: "#ffffff",
@@ -21,12 +23,16 @@ const DARK = {
   sectionLabel: "#888888", navBg: "#16213e",
 };
 
+function makeGuestId() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 9);
+}
+
 const AppContext = createContext({
   colors: LIGHT, isDark: false, themeMode: "auto",
   language: "th", user: null,
   t: (k) => k,
   changeTheme: () => {}, changeLanguage: () => {},
-  login: () => {}, logout: () => {},
+  login: async () => {}, logout: async () => {},
 });
 
 export function AppProvider({ children }) {
@@ -35,21 +41,45 @@ export function AppProvider({ children }) {
   const [language, setLanguage] = useState("th");
   const [user, setUser] = useState(null);
   const [ready, setReady] = useState(false);
+  const interceptorRef = useRef(null);
 
+  // Restore persisted state and JWT on startup
   useEffect(() => {
     (async () => {
       try {
-        const [tm, lang, u] = await Promise.all([
+        const [tm, lang, u, token] = await Promise.all([
           AsyncStorage.getItem("themeMode"),
           AsyncStorage.getItem("language"),
           AsyncStorage.getItem("user"),
+          AsyncStorage.getItem("authToken"),
         ]);
         if (tm) setThemeMode(tm);
         if (lang) setLanguage(lang);
         if (u) setUser(JSON.parse(u));
+        if (token) {
+          axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+        }
       } catch {}
       setReady(true);
     })();
+  }, []);
+
+  // Axios interceptor: auto-logout on 401
+  useEffect(() => {
+    interceptorRef.current = axios.interceptors.response.use(
+      (res) => res,
+      async (err) => {
+        if (err.response?.status === 401) {
+          await _clearSession();
+        }
+        return Promise.reject(err);
+      }
+    );
+    return () => {
+      if (interceptorRef.current != null) {
+        axios.interceptors.response.eject(interceptorRef.current);
+      }
+    };
   }, []);
 
   const isDark = themeMode === "auto" ? system === "dark" : themeMode === "dark";
@@ -69,14 +99,59 @@ export function AppProvider({ children }) {
     await AsyncStorage.setItem("language", lang).catch(() => {});
   }
 
+  async function _clearSession() {
+    setUser(null);
+    delete axios.defaults.headers.common["Authorization"];
+    await Promise.all([
+      AsyncStorage.removeItem("user"),
+      AsyncStorage.removeItem("authToken"),
+    ]).catch(() => {});
+  }
+
   async function login(userData) {
-    setUser(userData);
-    await AsyncStorage.setItem("user", JSON.stringify(userData)).catch(() => {});
+    // For guest logins, ensure a stable device-unique provider_id
+    let providerId = userData.id;
+    if (userData.provider === "guest") {
+      let guestId = await AsyncStorage.getItem("guestId").catch(() => null);
+      if (!guestId) {
+        guestId = makeGuestId();
+        await AsyncStorage.setItem("guestId", guestId).catch(() => {});
+      }
+      providerId = guestId;
+    }
+
+    // Authenticate with backend and get JWT
+    try {
+      const res = await axios.post(`${API_BASE_URL}/auth/login`, {
+        provider: userData.provider,
+        provider_id: providerId,
+        name: userData.name ?? null,
+        email: userData.email ?? null,
+        picture: userData.picture ?? null,
+      }, { timeout: 15000 });
+
+      const { token, user: backendUser } = res.data;
+      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+      await AsyncStorage.setItem("authToken", token).catch(() => {});
+
+      const merged = {
+        ...userData,
+        id: backendUser.id,
+        provider_id: providerId,
+      };
+      setUser(merged);
+      await AsyncStorage.setItem("user", JSON.stringify(merged)).catch(() => {});
+    } catch (err) {
+      // Backend unreachable — store locally so user isn't blocked
+      console.warn("Backend auth failed, continuing offline:", err?.message);
+      const localUser = { ...userData, id: providerId, provider_id: providerId };
+      setUser(localUser);
+      await AsyncStorage.setItem("user", JSON.stringify(localUser)).catch(() => {});
+    }
   }
 
   async function logout() {
-    setUser(null);
-    await AsyncStorage.removeItem("user").catch(() => {});
+    await _clearSession();
   }
 
   if (!ready) {
@@ -88,7 +163,10 @@ export function AppProvider({ children }) {
   }
 
   return (
-    <AppContext.Provider value={{ colors, isDark, themeMode, language, user, t, changeTheme, changeLanguage, login, logout }}>
+    <AppContext.Provider value={{
+      colors, isDark, themeMode, language, user, t,
+      changeTheme, changeLanguage, login, logout,
+    }}>
       {children}
     </AppContext.Provider>
   );

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import {
-  View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Platform, Alert,
+  View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Alert,
 } from "react-native";
 import * as WebBrowser from "expo-web-browser";
 import * as Google from "expo-auth-session/providers/google";
@@ -9,7 +9,6 @@ import { useApp } from "../contexts/AppContext";
 
 WebBrowser.maybeCompleteAuthSession();
 
-// ใส่ Google Web OAuth Client ID จาก console.cloud.google.com
 const GOOGLE_WEB_CLIENT_ID = "";
 
 export default function LoginScreen() {
@@ -29,7 +28,7 @@ export default function LoginScreen() {
     if (response?.type === "success") {
       fetchGoogleUser(response.authentication?.accessToken);
     } else if (response?.type === "error") {
-      Alert.alert(t("error"), response.error?.message ?? "Google login failed");
+      Alert.alert(t("error"), response.error?.message ?? t("googleFetchFail"));
     }
   }, [response]);
 
@@ -57,12 +56,15 @@ export default function LoginScreen() {
           AppleAuthentication.AppleAuthenticationScope.EMAIL,
         ],
       });
+      setBusy(true);
       const name = [cred.fullName?.givenName, cred.fullName?.familyName].filter(Boolean).join(" ") || "Apple User";
       await login({ id: cred.user, name, email: cred.email, picture: null, provider: "apple" });
     } catch (e) {
       if (e.code !== "ERR_REQUEST_CANCELED") {
         Alert.alert(t("error"), t("appleSignInFail"));
       }
+    } finally {
+      setBusy(false);
     }
   }
 
@@ -72,6 +74,17 @@ export default function LoginScreen() {
       return;
     }
     promptAsync();
+  }
+
+  async function handleGuest() {
+    setBusy(true);
+    try {
+      await login({ id: "guest", name: t("guest"), email: null, picture: null, provider: "guest" });
+    } catch {
+      Alert.alert(t("error"), t("loginFailed"));
+    } finally {
+      setBusy(false);
+    }
   }
 
   const s = styles(colors);
@@ -85,11 +98,7 @@ export default function LoginScreen() {
       </View>
 
       <View style={s.buttons}>
-        <TouchableOpacity
-          style={[s.btn, s.googleBtn]}
-          onPress={handleGooglePress}
-          disabled={busy}
-        >
+        <TouchableOpacity style={[s.btn, s.googleBtn]} onPress={handleGooglePress} disabled={busy}>
           <Text style={s.googleIcon}>G</Text>
           <Text style={s.googleText}>{t("signInGoogle")}</Text>
         </TouchableOpacity>
@@ -104,12 +113,17 @@ export default function LoginScreen() {
           />
         )}
 
-        <TouchableOpacity style={[s.btn, s.guestBtn]} onPress={() => login({ id: "guest", name: t("guest"), email: null, picture: null, provider: "guest" })}>
+        <TouchableOpacity style={[s.btn, s.guestBtn]} onPress={handleGuest} disabled={busy}>
           <Text style={[s.guestText, { color: colors.subtext }]}>{t("continueGuest")}</Text>
         </TouchableOpacity>
       </View>
 
-      {busy && <ActivityIndicator color={colors.primary} style={{ marginTop: 16 }} />}
+      {busy && (
+        <View style={s.busyRow}>
+          <ActivityIndicator color={colors.primary} />
+          <Text style={[s.busyText, { color: colors.subtext }]}>{t("signingIn")}</Text>
+        </View>
+      )}
     </View>
   );
 }
@@ -128,4 +142,6 @@ const styles = (c) => StyleSheet.create({
   appleNativeBtn: { height: 50, width: "100%" },
   guestBtn: { paddingVertical: 10 },
   guestText: { fontSize: 14, textDecorationLine: "underline" },
+  busyRow: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, marginTop: 8 },
+  busyText: { fontSize: 14 },
 });

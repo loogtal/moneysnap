@@ -6,20 +6,23 @@ from fastapi import APIRouter, Depends, UploadFile, File, HTTPException
 from sqlalchemy.orm import Session
 
 from backend.database import get_db
-from backend.models import Transaction
+from backend.models import Transaction, User
+from backend.auth_utils import get_current_user
 from backend.services.ocr_service import extract_slip_data
 from backend.services.category_service import categorize
-
-MAX_UPLOAD_BYTES = 20 * 1024 * 1024  # 20 MB
 
 router = APIRouter()
 UPLOAD_DIR = Path(__file__).resolve().parent.parent.parent / "uploads"
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+MAX_UPLOAD_BYTES = 20 * 1024 * 1024  # 20 MB
 
 
 @router.post("/scan")
-async def scan_slip(file: UploadFile = File(...), db: Session = Depends(get_db)):
-    # Allow content_type=None (React Native sometimes omits it)
+async def scan_slip(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     if file.content_type and not file.content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="ต้องอัปโหลดไฟล์รูปภาพเท่านั้น")
 
@@ -52,6 +55,7 @@ async def scan_slip(file: UploadFile = File(...), db: Session = Depends(get_db))
 
     category = categorize(slip_data.get("raw_text", ""))
     transaction = Transaction(
+        user_id=current_user.id,
         slip_image_path=str(file_path),
         sender_name=slip_data.get("sender_name"),
         receiver_name=slip_data.get("receiver_name"),
@@ -100,27 +104,11 @@ def list_models():
 
 @router.get("/test-api")
 def test_gemini_api():
-    """Test GOOGLE_API_KEY with one real Gemini call to diagnose quota issues."""
-    import os, httpx as _httpx
+    """Check GOOGLE_API_KEY format without consuming quota."""
+    import os
     api_key = os.environ.get("GOOGLE_API_KEY", "")
     if not api_key:
         return {"status": "no_key", "detail": "GOOGLE_API_KEY ไม่ได้ตั้งค่าใน Railway Variables"}
     if not api_key.startswith("AIza"):
         return {"status": "invalid_format", "detail": "Key ผิดรูปแบบ ต้องขึ้นต้นด้วย AIza", "preview": f"{api_key[:8]}...{api_key[-4:]}"}
-    try:
-        resp = _httpx.post(
-            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent",
-            params={"key": api_key},
-            json={"contents": [{"parts": [{"text": "say: ok"}]}]},
-            timeout=15,
-        )
-        body = resp.json()
-        if resp.status_code == 429:
-            err = body.get("error", {})
-            return {"status": "rate_limited", "code": err.get("status"), "message": err.get("message"), "preview": f"{api_key[:8]}...{api_key[-4:]}"}
-        if resp.status_code == 403:
-            return {"status": "forbidden", "detail": body.get("error", {}).get("message"), "preview": f"{api_key[:8]}...{api_key[-4:]}"}
-        resp.raise_for_status()
-        return {"status": "ok", "preview": f"{api_key[:8]}...{api_key[-4:]}"}
-    except Exception as e:
-        return {"status": "error", "detail": str(e)}
+    return {"status": "ok", "preview": f"{api_key[:8]}...{api_key[-4:]}"}

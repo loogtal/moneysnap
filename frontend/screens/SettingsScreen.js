@@ -2,7 +2,9 @@ import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert } from "react-native";
 import { useApp } from "../contexts/AppContext";
 
-export default function SettingsScreen({ navigation }) {
+const PROVIDER_LABEL = { google: "Google", apple: "Apple ID", guest: "Guest" };
+
+export default function SettingsScreen() {
   const { colors, themeMode, language, user, t, changeTheme, changeLanguage, logout } = useApp();
   const s = styles(colors);
 
@@ -12,6 +14,8 @@ export default function SettingsScreen({ navigation }) {
       { text: t("signOut"), style: "destructive", onPress: logout },
     ]);
   }
+
+  const isGuest = !user || user.provider === "guest";
 
   return (
     <ScrollView style={s.container} contentContainerStyle={s.content}>
@@ -42,25 +46,22 @@ export default function SettingsScreen({ navigation }) {
       </Section>
 
       <Section label={t("account")} colors={colors}>
-        {user && user.provider !== "guest" ? (
-          <View style={s.accountRow}>
-            <View>
-              <Text style={s.accountName}>{user.name}</Text>
-              {user.email ? <Text style={s.accountEmail}>{user.email}</Text> : null}
-              <Text style={s.accountProvider}>{user.provider === "google" ? "Google" : "Apple"}</Text>
+        <View style={s.accountRow}>
+          <View style={s.accountInfo}>
+            <Text style={s.accountName}>{isGuest ? t("guest") : user.name}</Text>
+            {!isGuest && user.email ? (
+              <Text style={s.accountEmail}>{user.email}</Text>
+            ) : null}
+            <View style={s.providerBadge}>
+              <Text style={s.providerText}>
+                {PROVIDER_LABEL[user?.provider] ?? user?.provider ?? "—"}
+              </Text>
             </View>
-            <TouchableOpacity style={s.signOutBtn} onPress={handleLogout}>
-              <Text style={s.signOutText}>{t("signOut")}</Text>
-            </TouchableOpacity>
           </View>
-        ) : (
-          <View style={s.accountRow}>
-            <Text style={s.accountName}>{t("guest")}</Text>
-            <TouchableOpacity style={s.signOutBtn} onPress={handleLogout}>
-              <Text style={s.signOutText}>{t("signOut")}</Text>
-            </TouchableOpacity>
-          </View>
-        )}
+          <TouchableOpacity style={s.signOutBtn} onPress={handleLogout}>
+            <Text style={s.signOutText}>{t("signOut")}</Text>
+          </TouchableOpacity>
+        </View>
       </Section>
 
     </ScrollView>
@@ -110,9 +111,11 @@ const styles = (c) => StyleSheet.create({
   container: { flex: 1, backgroundColor: c.bg },
   content: { padding: 20, paddingBottom: 48 },
   accountRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  accountInfo: { flex: 1, marginRight: 12 },
   accountName: { fontSize: 16, fontWeight: "700", color: c.text },
   accountEmail: { fontSize: 13, color: c.subtext, marginTop: 2 },
-  accountProvider: { fontSize: 12, color: c.primary, marginTop: 4 },
+  providerBadge: { marginTop: 6, alignSelf: "flex-start", backgroundColor: c.chip, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 2 },
+  providerText: { fontSize: 11, fontWeight: "600", color: c.primary },
   signOutBtn: { paddingVertical: 6, paddingHorizontal: 14, borderRadius: 8, borderWidth: 1, borderColor: c.danger },
   signOutText: { color: c.danger, fontSize: 13, fontWeight: "600" },
 });

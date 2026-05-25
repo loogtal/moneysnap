@@ -18,8 +18,18 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
 
-def _create_monthly_summary_view(connection):
+def _run_migrations(connection):
+    """Apply schema migrations for existing deployments."""
+    # Add user_id to transactions if the column is missing
+    try:
+        connection.execute(text("ALTER TABLE transactions ADD COLUMN user_id INTEGER"))
+        connection.commit()
+    except Exception:
+        connection.rollback()
+
+    # Recreate monthly_summary view (idempotent via CREATE OR REPLACE / IF NOT EXISTS)
     if _is_sqlite:
+        connection.execute(text("DROP VIEW IF EXISTS monthly_summary"))
         connection.execute(text(
             """
             CREATE VIEW IF NOT EXISTS monthly_summary AS
@@ -47,14 +57,14 @@ def _create_monthly_summary_view(connection):
             GROUP BY to_char(transaction_date, 'YYYY-MM'), transaction_type, category;
             """
         ))
+    connection.commit()
 
 
 def init_db() -> None:
-    from backend.models import Transaction, TipsCache  # noqa: F401 — ensure all tables are registered
+    from backend.models import User, Transaction, TipsCache  # noqa: F401
     Base.metadata.create_all(bind=engine)
     with engine.connect() as connection:
-        _create_monthly_summary_view(connection)
-        connection.commit()
+        _run_migrations(connection)
 
 
 def get_db():

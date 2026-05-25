@@ -7,7 +7,8 @@ from sqlalchemy import extract, nullslast
 from sqlalchemy.orm import Session
 
 from backend.database import get_db
-from backend.models import Transaction
+from backend.models import Transaction, User
+from backend.auth_utils import get_current_user
 from backend.services.category_service import categorize
 from backend.services.csv_parser import parse_bank_csv
 
@@ -48,9 +49,10 @@ def list_transactions(
     type: Optional[str] = None,
     page: int = 1,
     page_size: int = 20,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    query = db.query(Transaction)
+    query = db.query(Transaction).filter(Transaction.user_id == current_user.id)
 
     if year and month:
         query = query.filter(extract("year", Transaction.transaction_date) == year)
@@ -74,16 +76,31 @@ def list_transactions(
 
 
 @router.get("/{transaction_id}")
-def get_transaction(transaction_id: int, db: Session = Depends(get_db)):
-    transaction = db.query(Transaction).filter(Transaction.id == transaction_id).first()
+def get_transaction(
+    transaction_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    transaction = db.query(Transaction).filter(
+        Transaction.id == transaction_id,
+        Transaction.user_id == current_user.id,
+    ).first()
     if not transaction:
         raise HTTPException(status_code=404, detail="ไม่พบธุรกรรม")
     return _serialize(transaction)
 
 
 @router.patch("/{transaction_id}")
-def update_transaction(transaction_id: int, update: TransactionUpdate, db: Session = Depends(get_db)):
-    transaction = db.query(Transaction).filter(Transaction.id == transaction_id).first()
+def update_transaction(
+    transaction_id: int,
+    update: TransactionUpdate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    transaction = db.query(Transaction).filter(
+        Transaction.id == transaction_id,
+        Transaction.user_id == current_user.id,
+    ).first()
     if not transaction:
         raise HTTPException(status_code=404, detail="ไม่พบธุรกรรม")
 
@@ -103,8 +120,15 @@ def update_transaction(transaction_id: int, update: TransactionUpdate, db: Sessi
 
 
 @router.delete("/{transaction_id}")
-def delete_transaction(transaction_id: int, db: Session = Depends(get_db)):
-    transaction = db.query(Transaction).filter(Transaction.id == transaction_id).first()
+def delete_transaction(
+    transaction_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    transaction = db.query(Transaction).filter(
+        Transaction.id == transaction_id,
+        Transaction.user_id == current_user.id,
+    ).first()
     if not transaction:
         raise HTTPException(status_code=404, detail="ไม่พบธุรกรรม")
     db.delete(transaction)
@@ -113,7 +137,11 @@ def delete_transaction(transaction_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("/import-csv")
-async def import_csv(file: UploadFile = File(...), db: Session = Depends(get_db)):
+async def import_csv(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
     if not file.filename or not file.filename.lower().endswith(".csv"):
         raise HTTPException(status_code=400, detail="ต้องอัปโหลดไฟล์ .csv เท่านั้น")
 
@@ -128,6 +156,7 @@ async def import_csv(file: UploadFile = File(...), db: Session = Depends(get_db)
         description = row.get("note") or ""
         category = categorize(description)
         transaction = Transaction(
+            user_id=current_user.id,
             amount=row["amount"],
             transaction_type=row["transaction_type"],
             transaction_date=row["transaction_date"],
