@@ -29,9 +29,10 @@ GEMINI_URL = f"{_GEMINI_BASE}/{_DEFAULT_MODEL}:generateContent"
 # Fallback models tried in order if the primary model has quota=0
 _FALLBACK_MODELS = [
     "gemini-2.0-flash-lite",
+    "gemini-2.0-flash",
+    "gemini-2.5-flash",
     "gemini-1.5-flash",
     "gemini-1.5-flash-8b",
-    "gemini-2.0-flash",
 ]
 
 
