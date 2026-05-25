@@ -1,12 +1,67 @@
-import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert } from "react-native";
+import React, { useEffect, useState } from "react";
+import {
+  View, Text, TouchableOpacity, StyleSheet,
+  ScrollView, Alert, Image, ActivityIndicator,
+} from "react-native";
+import axios from "axios";
+import { API_BASE_URL } from "../config";
 import { useApp } from "../contexts/AppContext";
 
 const PROVIDER_LABEL = { google: "Google", apple: "Apple ID", guest: "Guest" };
 
+function Avatar({ uri, name, size, colors }) {
+  const initial = name ? name.charAt(0).toUpperCase() : "?";
+  if (uri) {
+    return (
+      <Image
+        source={{ uri }}
+        style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: colors.border }}
+      />
+    );
+  }
+  return (
+    <View style={{
+      width: size, height: size, borderRadius: size / 2,
+      backgroundColor: colors.primary, justifyContent: "center", alignItems: "center",
+    }}>
+      <Text style={{ color: "#fff", fontSize: size * 0.4, fontWeight: "700" }}>{initial}</Text>
+    </View>
+  );
+}
+
+function StatBox({ label, value, colors }) {
+  return (
+    <View style={{ flex: 1, alignItems: "center", paddingVertical: 10 }}>
+      <Text style={{ fontSize: 15, fontWeight: "700", color: colors.text }}>{value}</Text>
+      <Text style={{ fontSize: 11, color: colors.subtext, marginTop: 2, textAlign: "center" }}>{label}</Text>
+    </View>
+  );
+}
+
+function Divider({ colors }) {
+  return <View style={{ width: 1, height: "60%", backgroundColor: colors.border }} />;
+}
+
 export default function SettingsScreen() {
   const { colors, themeMode, language, user, t, changeTheme, changeLanguage, logout } = useApp();
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
   const s = styles(colors);
+
+  useEffect(() => {
+    fetchProfile();
+  }, []);
+
+  async function fetchProfile() {
+    try {
+      const res = await axios.get(`${API_BASE_URL}/auth/me`);
+      setProfile(res.data);
+    } catch {
+      // offline — use local user data
+    } finally {
+      setLoading(false);
+    }
+  }
 
   function handleLogout() {
     Alert.alert(t("account"), t("signOutConfirm"), [
@@ -16,10 +71,73 @@ export default function SettingsScreen() {
   }
 
   const isGuest = !user || user.provider === "guest";
+  const displayName = profile?.name ?? user?.name ?? t("guest");
+  const displayEmail = profile?.email ?? user?.email ?? null;
+  const displayPic = profile?.picture ?? user?.picture ?? null;
+  const provider = profile?.provider ?? user?.provider ?? "guest";
+
+  // Format member since date
+  const createdAt = profile?.created_at;
+  const memberSince = createdAt
+    ? new Date(createdAt).toLocaleDateString(language === "th" ? "th-TH" : "en-US", { year: "numeric", month: "long" })
+    : null;
 
   return (
     <ScrollView style={s.container} contentContainerStyle={s.content}>
 
+      {/* Profile card */}
+      <View style={[s.profileCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+        {loading ? (
+          <ActivityIndicator color={colors.primary} style={{ marginVertical: 20 }} />
+        ) : (
+          <>
+            <View style={s.profileTop}>
+              <Avatar uri={displayPic} name={displayName} size={72} colors={colors} />
+              <View style={s.profileInfo}>
+                <Text style={s.profileName} numberOfLines={1}>{displayName}</Text>
+                {displayEmail ? (
+                  <Text style={s.profileEmail} numberOfLines={1}>{displayEmail}</Text>
+                ) : null}
+                <View style={s.providerBadge}>
+                  <Text style={s.providerText}>{PROVIDER_LABEL[provider] ?? provider}</Text>
+                </View>
+                {memberSince ? (
+                  <Text style={s.memberSince}>{t("memberSince")} {memberSince}</Text>
+                ) : null}
+              </View>
+            </View>
+
+            {/* Stats */}
+            {profile?.this_month && (
+              <View style={[s.statsRow, { borderTopColor: colors.border }]}>
+                <StatBox
+                  label={t("thisMonthIncome")}
+                  value={`฿${profile.this_month.income.toFixed(0)}`}
+                  colors={colors}
+                />
+                <Divider colors={colors} />
+                <StatBox
+                  label={t("thisMonthExpense")}
+                  value={`฿${profile.this_month.expense.toFixed(0)}`}
+                  colors={colors}
+                />
+                <Divider colors={colors} />
+                <StatBox
+                  label={t("allTimeTx")}
+                  value={String(profile.all_time?.total_count ?? 0)}
+                  colors={colors}
+                />
+              </View>
+            )}
+
+            <TouchableOpacity style={s.signOutBtn} onPress={handleLogout}>
+              <Text style={s.signOutText}>{t("signOut")}</Text>
+            </TouchableOpacity>
+          </>
+        )}
+      </View>
+
+      {/* Language */}
       <Section label={t("language")} colors={colors}>
         <SegmentRow
           options={[
@@ -32,6 +150,7 @@ export default function SettingsScreen() {
         />
       </Section>
 
+      {/* Theme */}
       <Section label={t("theme")} colors={colors}>
         <SegmentRow
           options={[
@@ -45,39 +164,25 @@ export default function SettingsScreen() {
         />
       </Section>
 
-      <Section label={t("account")} colors={colors}>
-        <View style={s.accountRow}>
-          <View style={s.accountInfo}>
-            <Text style={s.accountName}>{isGuest ? t("guest") : user.name}</Text>
-            {!isGuest && user.email ? (
-              <Text style={s.accountEmail}>{user.email}</Text>
-            ) : null}
-            <View style={s.providerBadge}>
-              <Text style={s.providerText}>
-                {PROVIDER_LABEL[user?.provider] ?? user?.provider ?? "—"}
-              </Text>
-            </View>
-          </View>
-          <TouchableOpacity style={s.signOutBtn} onPress={handleLogout}>
-            <Text style={s.signOutText}>{t("signOut")}</Text>
-          </TouchableOpacity>
-        </View>
-      </Section>
-
     </ScrollView>
   );
 }
 
 function Section({ label, colors, children }) {
-  const s = StyleSheet.create({
-    wrap: { marginBottom: 28 },
-    label: { fontSize: 12, fontWeight: "700", color: colors.sectionLabel, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 10 },
-    card: { backgroundColor: colors.surface, borderRadius: 14, padding: 16, borderWidth: 1, borderColor: colors.border },
-  });
   return (
-    <View style={s.wrap}>
-      <Text style={s.label}>{label}</Text>
-      <View style={s.card}>{children}</View>
+    <View style={{ marginBottom: 28 }}>
+      <Text style={{
+        fontSize: 12, fontWeight: "700", color: colors.sectionLabel,
+        textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 10,
+      }}>
+        {label}
+      </Text>
+      <View style={{
+        backgroundColor: colors.surface, borderRadius: 14,
+        padding: 16, borderWidth: 1, borderColor: colors.border,
+      }}>
+        {children}
+      </View>
     </View>
   );
 }
@@ -110,12 +215,32 @@ function SegmentRow({ options, value, onChange, colors }) {
 const styles = (c) => StyleSheet.create({
   container: { flex: 1, backgroundColor: c.bg },
   content: { padding: 20, paddingBottom: 48 },
-  accountRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  accountInfo: { flex: 1, marginRight: 12 },
-  accountName: { fontSize: 16, fontWeight: "700", color: c.text },
-  accountEmail: { fontSize: 13, color: c.subtext, marginTop: 2 },
-  providerBadge: { marginTop: 6, alignSelf: "flex-start", backgroundColor: c.chip, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 2 },
+  profileCard: {
+    borderRadius: 16, borderWidth: 1, marginBottom: 28,
+    overflow: "hidden",
+  },
+  profileTop: {
+    flexDirection: "row", alignItems: "center",
+    gap: 16, padding: 20,
+  },
+  profileInfo: { flex: 1 },
+  profileName: { fontSize: 18, fontWeight: "700", color: c.text },
+  profileEmail: { fontSize: 13, color: c.subtext, marginTop: 2 },
+  providerBadge: {
+    marginTop: 6, alignSelf: "flex-start",
+    backgroundColor: c.chip, borderRadius: 8,
+    paddingHorizontal: 8, paddingVertical: 3,
+  },
   providerText: { fontSize: 11, fontWeight: "600", color: c.primary },
-  signOutBtn: { paddingVertical: 6, paddingHorizontal: 14, borderRadius: 8, borderWidth: 1, borderColor: c.danger },
-  signOutText: { color: c.danger, fontSize: 13, fontWeight: "600" },
+  memberSince: { fontSize: 11, color: c.subtext, marginTop: 4 },
+  statsRow: {
+    flexDirection: "row", alignItems: "center",
+    borderTopWidth: 1, paddingHorizontal: 8,
+  },
+  signOutBtn: {
+    marginHorizontal: 20, marginBottom: 16, marginTop: 4,
+    paddingVertical: 10, borderRadius: 10,
+    borderWidth: 1, borderColor: c.danger, alignItems: "center",
+  },
+  signOutText: { color: c.danger, fontWeight: "600", fontSize: 14 },
 });

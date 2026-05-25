@@ -26,6 +26,11 @@ export const TR = {
     analysisTitle: "วิเคราะห์การใช้จ่าย", aiAnalyzing: "กำลังวิเคราะห์ด้วย AI...",
     noTips: "ไม่มีคำแนะนำในขณะนี้", refresh: "รีเฟรช",
     aiTips: "คำแนะนำ AI",
+    // Profile
+    greeting: "สวัสดี",
+    profile: "โปรไฟล์", memberSince: "สมาชิกตั้งแต่",
+    thisMonthIncome: "รายรับเดือนนี้", thisMonthExpense: "รายจ่ายเดือนนี้",
+    allTimeTx: "ธุรกรรมทั้งหมด", thisMonthTx: "ธุรกรรมเดือนนี้",
     // Chart
     noDataMonth: "ไม่มีข้อมูลเดือนนี้", spendingByCategory: "การใช้จ่ายตามหมวด",
     totalLabel: "รวม",
@@ -102,6 +107,11 @@ export const TR = {
     analysisTitle: "Spending Analysis", aiAnalyzing: "AI is analyzing...",
     noTips: "No tips available", refresh: "Refresh",
     aiTips: "AI Tips",
+    // Profile
+    greeting: "Hello",
+    profile: "Profile", memberSince: "Member since",
+    thisMonthIncome: "Income this month", thisMonthExpense: "Expense this month",
+    allTimeTx: "Total transactions", thisMonthTx: "Transactions this month",
     // Chart
     noDataMonth: "No data this month", spendingByCategory: "Spending by Category",
     totalLabel: "Total",
