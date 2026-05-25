@@ -6,12 +6,11 @@ API_KEY = os.environ.get("GOOGLE_API_KEY", "")
 
 def get_spending_tips(monthly_data: Dict) -> str:
     if not API_KEY:
-        return "ยังไม่สามารถเชื่อมต่อ AI ได้ โปรดตั้งค่า GOOGLE_API_KEY แล้วรีสตาร์ท backend"
+        return "ยังไม่สามารถเชื่อมต่อ AI ได้ โปรดตั้งค่า GOOGLE_API_KEY"
 
     try:
-        import google.generativeai as genai
-        genai.configure(api_key=API_KEY)
-        model = genai.GenerativeModel("gemini-1.5-flash-latest")
+        from google import genai
+        client = genai.Client(api_key=API_KEY)
 
         prompt = f"""วิเคราะห์ข้อมูลการใช้จ่ายของผู้ใช้และให้คำแนะนำในการประหยัดเงิน:
 
@@ -26,7 +25,10 @@ def get_spending_tips(monthly_data: Dict) -> str:
 
 ตอบเป็นภาษาไทย สั้น กระชับ เป็นมิตร"""
 
-        response = model.generate_content(prompt)
+        response = client.models.generate_content(
+            model="gemini-1.5-flash",
+            contents=prompt,
+        )
         return response.text.strip()
     except Exception:
-        return "ขออภัย เกิดข้อผิดพลาดในการเรียกใช้งาน AI โปรดลองอีกครั้งในภายหลัง"
+        return "ขออภัย เกิดข้อผิดพลาดในการเรียกใช้งาน AI โปรดลองอีกครั้ง"

@@ -1,4 +1,3 @@
-import base64
 import json
 import logging
 import os
@@ -44,14 +43,12 @@ def parse_date(date_str: str):
 def extract_slip_data(image_path: str) -> dict:
     api_key = os.environ.get("GOOGLE_API_KEY", "")
     if not api_key:
-        logger.error("GOOGLE_API_KEY ไม่ได้ตั้งค่า")
         raise RuntimeError("ไม่พบ GOOGLE_API_KEY — กรุณาตั้งค่าใน Railway environment variables")
 
-    import google.generativeai as genai
-    from google.generativeai.types import HarmCategory, HarmBlockThreshold
+    from google import genai
+    from google.genai import types
 
-    genai.configure(api_key=api_key)
-    model = genai.GenerativeModel("gemini-1.5-flash-latest")
+    client = genai.Client(api_key=api_key)
 
     suffix = Path(image_path).suffix.lower()
     media_type = MEDIA_TYPES.get(suffix, "image/jpeg")
@@ -75,26 +72,24 @@ def extract_slip_data(image_path: str) -> dict:
 กฎสำคัญ:
 - amount: เงินที่โอน/รับ ไม่ใช่ยอดคงเหลือ
 - date_str: แปลงเป็น DD/MM/YYYY เสมอ ถ้าปีเป็นพ.ศ.ให้ลบ 543
-- transaction_type: "income"=รับเงิน, "expense"=จ่าย/โอนออก
+- transaction_type: income=รับเงิน, expense=จ่าย/โอนออก
 - raw_text: คัดลอกข้อความทั้งหมดในสลิป"""
 
     try:
-        response = model.generate_content(
-            [{"mime_type": media_type, "data": base64.b64encode(image_data).decode()}, prompt],
-            safety_settings={
-                HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_NONE,
-                HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_NONE,
-                HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_NONE,
-                HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_NONE,
-            },
+        response = client.models.generate_content(
+            model="gemini-1.5-flash",
+            contents=[
+                types.Part.from_bytes(data=image_data, mime_type=media_type),
+                prompt,
+            ],
         )
         raw = response.text.strip()
-        logger.info("Gemini raw response: %s", raw)
+        logger.info("Gemini response: %s", raw)
         raw = re.sub(r"^```(?:json)?\s*", "", raw)
         raw = re.sub(r"\s*```$", "", raw)
         match = re.search(r"\{.*\}", raw, re.DOTALL)
         if not match:
-            raise ValueError(f"ไม่พบ JSON ใน response: {raw[:200]}")
+            raise ValueError(f"ไม่พบ JSON: {raw[:200]}")
         data = json.loads(match.group())
         data["transaction_date"] = parse_date(data.get("date_str"))
         data.setdefault("raw_text", "")
