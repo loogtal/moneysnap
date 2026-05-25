@@ -71,15 +71,27 @@ async def scan_slip(file: UploadFile = File(...), db: Session = Depends(get_db))
 
 @router.get("/test-api")
 def test_gemini_api():
-    """Check if GOOGLE_API_KEY is configured (does NOT call Gemini to avoid burning quota)."""
-    import os
+    """Test GOOGLE_API_KEY with one real Gemini call to diagnose quota issues."""
+    import os, httpx as _httpx
     api_key = os.environ.get("GOOGLE_API_KEY", "")
     if not api_key:
         return {"status": "no_key", "detail": "GOOGLE_API_KEY ไม่ได้ตั้งค่าใน Railway Variables"}
     if not api_key.startswith("AIza"):
-        return {"status": "invalid_format", "detail": "Key ผิดรูปแบบ ต้องขึ้นต้นด้วย AIza"}
-    return {
-        "status": "key_set",
-        "preview": f"{api_key[:8]}...{api_key[-4:]}",
-        "detail": "Key ตั้งค่าแล้ว ถ้าสแกนไม่ได้อาจถึง daily limit — รอพรุ่งนี้หรือสร้าง key ใหม่"
-    }
+        return {"status": "invalid_format", "detail": "Key ผิดรูปแบบ ต้องขึ้นต้นด้วย AIza", "preview": f"{api_key[:8]}...{api_key[-4:]}"}
+    try:
+        resp = _httpx.post(
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent",
+            params={"key": api_key},
+            json={"contents": [{"parts": [{"text": "say: ok"}]}]},
+            timeout=15,
+        )
+        body = resp.json()
+        if resp.status_code == 429:
+            err = body.get("error", {})
+            return {"status": "rate_limited", "code": err.get("status"), "message": err.get("message"), "preview": f"{api_key[:8]}...{api_key[-4:]}"}
+        if resp.status_code == 403:
+            return {"status": "forbidden", "detail": body.get("error", {}).get("message"), "preview": f"{api_key[:8]}...{api_key[-4:]}"}
+        resp.raise_for_status()
+        return {"status": "ok", "preview": f"{api_key[:8]}...{api_key[-4:]}"}
+    except Exception as e:
+        return {"status": "error", "detail": str(e)}
