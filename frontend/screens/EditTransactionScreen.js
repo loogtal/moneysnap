@@ -81,14 +81,14 @@ export default function EditTransactionScreen({ route, navigation }) {
       <Text style={s.label}>{t("typeLabel")}</Text>
       <View style={s.chipRow}>
         {TYPES.map((tp) => (
-          <Chip key={tp} label={tp === "expense" ? t("expense") : t("income")} active={form.transaction_type === tp} onPress={set("transaction_type")(tp)} colors={colors} />
+          <Chip key={tp} label={tp === "expense" ? t("expense") : t("income")} active={form.transaction_type === tp} onPress={() => set("transaction_type")(tp)} colors={colors} />
         ))}
       </View>
 
       <Text style={s.label}>{t("categoryLabel")}</Text>
       <View style={s.chipRow}>
-        {CATEGORIES.map((c) => (
-          <Chip key={c} label={c} active={form.category === c} onPress={set("category")(c)} colors={colors} />
+        {CATEGORIES.map((cat) => (
+          <Chip key={cat} label={cat} active={form.category === cat} onPress={() => set("category")(cat)} colors={colors} />
         ))}
       </View>
 
