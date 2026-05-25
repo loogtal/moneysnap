@@ -1,107 +1,83 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useState, useCallback } from "react";
 import {
-  View,
-  Text,
-  FlatList,
-  ActivityIndicator,
-  StyleSheet,
-  TouchableOpacity,
-  Alert,
-  RefreshControl,
+  View, Text, FlatList, ActivityIndicator, StyleSheet,
+  TouchableOpacity, Alert, RefreshControl,
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import axios from "axios";
 import { API_BASE_URL } from "../config";
 import CategoryBadge from "../components/CategoryBadge";
+import { useApp } from "../contexts/AppContext";
 
 export default function TransactionsScreen({ navigation }) {
+  const { colors, t } = useApp();
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  useFocusEffect(
-    useCallback(() => {
-      loadTransactions();
-    }, [])
-  );
+  useFocusEffect(useCallback(() => { load(); }, []));
 
-  async function loadTransactions() {
+  async function load() {
     try {
-      const response = await axios.get(`${API_BASE_URL}/transactions`, {
-        params: { page: 1, page_size: 100 },
-      });
-      setTransactions(response.data.results || []);
+      const res = await axios.get(`${API_BASE_URL}/transactions`, { params: { page: 1, page_size: 100 } });
+      setTransactions(res.data.results || []);
     } catch {
-      Alert.alert("ข้อผิดพลาด", "โหลดข้อมูลไม่สำเร็จ");
+      Alert.alert(t("error"), t("loadFailed"));
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
   }
 
-  function onRefresh() {
-    setRefreshing(true);
-    loadTransactions();
-  }
-
-  function handleEdit(item) {
-    navigation.navigate("EditTransaction", { transactionId: item.id });
-  }
-
-  function handleDelete(item) {
-    Alert.alert(
-      "ลบธุรกรรม",
-      `ต้องการลบรายการ ฿${item.amount?.toFixed(2)} ใช่หรือไม่?`,
-      [
-        { text: "ยกเลิก", style: "cancel" },
-        {
-          text: "ลบ",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await axios.delete(`${API_BASE_URL}/transactions/${item.id}`);
-              setTransactions((prev) => prev.filter((t) => t.id !== item.id));
-            } catch {
-              Alert.alert("ข้อผิดพลาด", "ลบไม่สำเร็จ โปรดลองอีกครั้ง");
-            }
-          },
+  function confirmDelete(item) {
+    Alert.alert(t("deleteTitle"), `฿${item.amount?.toFixed(2)}`, [
+      { text: t("cancel"), style: "cancel" },
+      {
+        text: t("delete"), style: "destructive",
+        onPress: async () => {
+          try {
+            await axios.delete(`${API_BASE_URL}/transactions/${item.id}`);
+            setTransactions((p) => p.filter((x) => x.id !== item.id));
+          } catch {
+            Alert.alert(t("error"), t("deleteFailed"));
+          }
         },
-      ]
-    );
+      },
+    ]);
   }
 
-  if (loading) {
-    return <ActivityIndicator style={styles.center} size="large" />;
-  }
+  const s = styles(colors);
+
+  if (loading) return <ActivityIndicator style={s.center} size="large" color={colors.primary} />;
 
   return (
-    <View style={styles.container}>
+    <View style={s.container}>
       {transactions.length === 0 ? (
-        <Text style={styles.empty}>ยังไม่มีธุรกรรมในระบบ</Text>
+        <Text style={s.empty}>{t("noData")}</Text>
       ) : (
         <FlatList
           data={transactions}
           keyExtractor={(item) => String(item.id)}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} />}
           renderItem={({ item }) => (
-            <View style={styles.card}>
-              <View style={styles.topRow}>
-                <Text style={styles.name} numberOfLines={1}>{item.receiver_name || "รายการไม่ระบุ"}</Text>
-                <Text style={[styles.amount, item.transaction_type === "income" && styles.income]}>
+            <View style={s.card}>
+              <View style={s.topRow}>
+                <Text style={s.name} numberOfLines={1}>{item.receiver_name || t("unknownTx")}</Text>
+                <Text style={[s.amount, item.transaction_type === "income" && { color: colors.success }]}>
                   {item.transaction_type === "income" ? "+" : "-"}฿{item.amount?.toFixed(2) ?? "0.00"}
                 </Text>
               </View>
-              <Text style={styles.bank}>{item.bank_name || "ธนาคารไม่ระบุ"}</Text>
-              <View style={styles.metaRow}>
-                <Text style={styles.date}>{item.transaction_date?.slice(0, 10) || "ไม่ระบุวันที่"}</Text>
+              <Text style={s.bank}>{item.bank_name || t("unspecified")}</Text>
+              <View style={s.meta}>
+                <Text style={s.date}>{item.transaction_date?.slice(0, 10) || t("noDate")}</Text>
                 <CategoryBadge category={item.category || "other"} />
               </View>
-              <View style={styles.actions}>
-                <TouchableOpacity style={styles.actionBtn} onPress={() => handleEdit(item)}>
-                  <Text style={styles.actionEdit}>แก้ไข</Text>
+              <View style={s.actions}>
+                <TouchableOpacity onPress={() => navigation.navigate("EditTransaction", { transactionId: item.id })}>
+                  <Text style={s.editText}>{t("edit")}</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.actionBtn} onPress={() => handleDelete(item)}>
-                  <Text style={styles.actionDelete}>ลบ</Text>
+                <TouchableOpacity onPress={() => confirmDelete(item)}>
+                  <Text style={s.deleteText}>{t("delete")}</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -112,20 +88,21 @@ export default function TransactionsScreen({ navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f5f5f7", padding: 12 },
+const styles = (c) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: c.bg, padding: 12 },
   center: { flex: 1, justifyContent: "center" },
-  empty: { marginTop: 40, textAlign: "center", color: "#777", fontSize: 16 },
-  card: { backgroundColor: "#fff", borderRadius: 12, padding: 14, marginBottom: 10, elevation: 1, shadowColor: "#000", shadowOpacity: 0.05, shadowRadius: 4, shadowOffset: { width: 0, height: 2 } },
+  empty: { marginTop: 40, textAlign: "center", color: c.subtext, fontSize: 16 },
+  card: {
+    backgroundColor: c.card, borderRadius: 12, padding: 14, marginBottom: 10,
+    borderWidth: 1, borderColor: c.border,
+  },
   topRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 4 },
-  name: { fontSize: 15, fontWeight: "700", flex: 1, marginRight: 8 },
-  amount: { fontSize: 15, fontWeight: "700", color: "#ef4444" },
-  income: { color: "#16a34a" },
-  bank: { color: "#666", fontSize: 13, marginBottom: 8 },
-  metaRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  date: { color: "#555", fontSize: 13 },
-  actions: { flexDirection: "row", justifyContent: "flex-end", gap: 16, marginTop: 10, borderTopWidth: 1, borderTopColor: "#f0f0f0", paddingTop: 8 },
-  actionBtn: { paddingHorizontal: 4 },
-  actionEdit: { color: "#2d6cdf", fontWeight: "600", fontSize: 14 },
-  actionDelete: { color: "#ef4444", fontWeight: "600", fontSize: 14 },
+  name: { fontSize: 15, fontWeight: "700", flex: 1, marginRight: 8, color: c.text },
+  amount: { fontSize: 15, fontWeight: "700", color: c.danger },
+  bank: { color: c.subtext, fontSize: 13, marginBottom: 8 },
+  meta: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  date: { color: c.subtext, fontSize: 13 },
+  actions: { flexDirection: "row", justifyContent: "flex-end", gap: 20, marginTop: 10, borderTopWidth: 1, borderTopColor: c.border, paddingTop: 8 },
+  editText: { color: c.primary, fontWeight: "600", fontSize: 14 },
+  deleteText: { color: c.danger, fontWeight: "600", fontSize: 14 },
 });

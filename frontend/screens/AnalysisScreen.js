@@ -4,8 +4,10 @@ import axios from "axios";
 import { API_BASE_URL } from "../config";
 import AiTipCard from "../components/AiTipCard";
 import SpendingChart from "../components/SpendingChart";
+import { useApp } from "../contexts/AppContext";
 
 export default function AnalysisScreen() {
+  const { colors, t } = useApp();
   const [summary, setSummary] = useState([]);
   const [tips, setTips] = useState("");
   const [loadingChart, setLoadingChart] = useState(true);
@@ -18,10 +20,9 @@ export default function AnalysisScreen() {
 
   async function loadChart() {
     try {
-      const response = await axios.get(`${API_BASE_URL}/analysis/monthly`);
-      setSummary(response.data.summary || []);
-    } catch (error) {
-      console.warn(error);
+      const res = await axios.get(`${API_BASE_URL}/analysis/monthly`);
+      setSummary(res.data.summary || []);
+    } catch {
     } finally {
       setLoadingChart(false);
     }
@@ -30,16 +31,15 @@ export default function AnalysisScreen() {
   async function loadTips() {
     try {
       const month = new Date().toISOString().slice(0, 7);
-      const aiRes = await axios.post(`${API_BASE_URL}/analysis/ai-tips`, { month });
-      setTips(aiRes.data.tips || "");
-    } catch (error) {
-      console.warn(error);
+      const res = await axios.post(`${API_BASE_URL}/analysis/ai-tips`, { month });
+      setTips(res.data.tips || "");
+    } catch {
     } finally {
       setLoadingTips(false);
     }
   }
 
-  function handleRefresh() {
+  function refresh() {
     setLoadingChart(true);
     setLoadingTips(true);
     setSummary([]);
@@ -49,40 +49,41 @@ export default function AnalysisScreen() {
   }
 
   const thisMonth = summary.filter((item) => item.month === new Date().toISOString().slice(0, 7));
+  const s = styles(colors);
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.heading}>วิเคราะห์การใช้จ่าย</Text>
+    <ScrollView style={s.container} contentContainerStyle={s.content}>
+      <Text style={s.heading}>{t("analysisTitle")}</Text>
 
       {loadingChart ? (
-        <ActivityIndicator size="large" style={styles.chartLoader} />
+        <ActivityIndicator size="large" color={colors.primary} style={s.loader} />
       ) : (
         <SpendingChart data={thisMonth} />
       )}
 
       {loadingTips ? (
-        <View style={styles.tipsLoader}>
-          <ActivityIndicator size="small" color="#2d6cdf" />
-          <Text style={styles.tipsLoaderText}>กำลังวิเคราะห์ด้วย AI...</Text>
+        <View style={s.tipsRow}>
+          <ActivityIndicator size="small" color={colors.primary} />
+          <Text style={s.tipsText}>{t("aiAnalyzing")}</Text>
         </View>
       ) : (
-        <AiTipCard tipText={tips || "ไม่มีคำแนะนำเพิ่มเติมในขณะนี้"} />
+        <AiTipCard tipText={tips || t("noTips")} />
       )}
 
-      <TouchableOpacity style={styles.refreshBtn} onPress={handleRefresh}>
-        <Text style={styles.refreshText}>รีเฟรช</Text>
+      <TouchableOpacity style={s.refreshBtn} onPress={refresh}>
+        <Text style={s.refreshText}>{t("refresh")}</Text>
       </TouchableOpacity>
     </ScrollView>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff" },
+const styles = (c) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: c.bg },
   content: { padding: 16, paddingBottom: 40 },
-  heading: { fontSize: 22, fontWeight: "bold", marginBottom: 16 },
-  chartLoader: { marginVertical: 40 },
-  tipsLoader: { flexDirection: "row", alignItems: "center", gap: 10, marginVertical: 16, paddingHorizontal: 4 },
-  tipsLoaderText: { color: "#888", fontSize: 14 },
-  refreshBtn: { marginTop: 20, alignSelf: "center", paddingVertical: 10, paddingHorizontal: 28, borderRadius: 8, borderWidth: 1, borderColor: "#2d6cdf" },
-  refreshText: { color: "#2d6cdf", fontWeight: "600" },
+  heading: { fontSize: 22, fontWeight: "bold", color: c.text, marginBottom: 16 },
+  loader: { marginVertical: 40 },
+  tipsRow: { flexDirection: "row", alignItems: "center", gap: 10, marginVertical: 16 },
+  tipsText: { color: c.subtext, fontSize: 14 },
+  refreshBtn: { marginTop: 20, alignSelf: "center", paddingVertical: 10, paddingHorizontal: 28, borderRadius: 8, borderWidth: 1, borderColor: c.primary },
+  refreshText: { color: c.primary, fontWeight: "600" },
 });

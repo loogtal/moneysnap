@@ -1,0 +1,114 @@
+export const TR = {
+  th: {
+    // Nav
+    home: "หน้าหลัก", scan: "สแกนสลิป", transactions: "ธุรกรรม",
+    analysis: "วิเคราะห์", importCSV: "นำเข้า CSV", settings: "ตั้งค่า",
+    // Home
+    thisMonth: "ภาพรวมเดือนนี้", recentTx: "ธุรกรรมล่าสุด",
+    noTransactions: "ยังไม่มีธุรกรรม",
+    // Scan
+    scanSlip: "สแกนสลิปธนาคาร", takePhoto: "ถ่ายรูปสลิป",
+    fromLibrary: "เลือกจากคลัง", scanResult: "ผลการสแกน",
+    sender: "ผู้ส่ง", receiver: "ผู้รับ", amount: "จำนวนเงิน",
+    bank: "ธนาคาร", date: "วันที่", type: "ประเภท",
+    income: "รายรับ", expense: "รายจ่าย", unspecified: "ไม่ระบุ",
+    savedHint: "ข้อมูลบันทึกแล้ว — กดแก้ไขหากไม่ถูกต้อง", editData: "แก้ไขข้อมูล",
+    needCamera: "ต้องอนุญาตการเข้าถึงกล้อง", needLibrary: "ต้องอนุญาตการเข้าถึงรูปภาพ",
+    // Loading stages
+    stage0: "กำลังส่งรูป...", stage1: "กำลังวิเคราะห์สลิป...",
+    stage2: "AI กำลังอ่านข้อมูล...", stage3: "เกือบเสร็จแล้ว...",
+    // Transactions
+    noData: "ยังไม่มีธุรกรรมในระบบ", edit: "แก้ไข", delete: "ลบ",
+    deleteTitle: "ลบธุรกรรม", cancel: "ยกเลิก",
+    noDate: "ไม่ระบุวันที่", unknownTx: "รายการไม่ระบุ",
+    // Analysis
+    analysisTitle: "วิเคราะห์การใช้จ่าย", aiAnalyzing: "กำลังวิเคราะห์ด้วย AI...",
+    noTips: "ไม่มีคำแนะนำในขณะนี้", refresh: "รีเฟรช",
+    // Edit
+    senderLabel: "ผู้ส่ง", receiverLabel: "ผู้รับ", amountLabel: "จำนวนเงิน (฿)",
+    bankLabel: "ธนาคาร", dateLabel: "วันที่ (YYYY-MM-DD)", noteLabel: "หมายเหตุ",
+    typeLabel: "ประเภท", categoryLabel: "หมวดหมู่", save: "บันทึก",
+    invalidAmount: "กรุณาระบุจำนวนเงินที่ถูกต้อง",
+    // Import
+    importTitle: "นำเข้า Statement ธนาคาร",
+    importDesc: "ดาวน์โหลดไฟล์ CSV จากแอปธนาคาร แล้วนำเข้าระบบเพื่อวิเคราะห์การใช้จ่ายอัตโนมัติ",
+    supportedBanks: "ธนาคารที่รองรับ", howTo: "วิธีดาวน์โหลด Statement",
+    chooseFile: "เลือกไฟล์ CSV", importing: "กำลังวิเคราะห์ข้อมูล...",
+    importSuccess: "นำเข้าสำเร็จ!", viewAll: "ดูธุรกรรมทั้งหมด",
+    importFail: "นำเข้าไม่สำเร็จ", wrongFile: "กรุณาเลือกไฟล์ .csv จากแอปธนาคาร",
+    // Settings
+    settingsTitle: "ตั้งค่า", language: "ภาษา", theme: "ธีม",
+    themeLight: "สว่าง", themeDark: "มืด", themeAuto: "ออโต้",
+    account: "บัญชี", signOut: "ออกจากระบบ", signOutConfirm: "ต้องการออกจากระบบ?",
+    guest: "ใช้งานโดยไม่ลงทะเบียน",
+    // Login
+    loginTitle: "MoneySnap", loginSubtitle: "ติดตามการใช้จ่ายด้วย AI",
+    signInGoogle: "เข้าสู่ระบบด้วย Google", signInApple: "เข้าสู่ระบบด้วย Apple",
+    continueGuest: "ใช้งานโดยไม่ลงทะเบียน",
+    appleIosOnly: "Apple Sign In ใช้ได้บน iOS เท่านั้น",
+    // Errors
+    error: "ข้อผิดพลาด", loadFailed: "โหลดข้อมูลไม่สำเร็จ",
+    saveFailed: "บันทึกไม่สำเร็จ โปรดลองอีกครั้ง",
+    deleteFailed: "ลบไม่สำเร็จ โปรดลองอีกครั้ง",
+    scanFailed: "เกิดข้อผิดพลาด",
+    rateLimited: "AI ถูกใช้งานหนักเกินไป รอ 1 นาทีแล้วลองใหม่",
+    timeoutError: "เซิร์ฟเวอร์ใช้เวลานานเกินไป ลองอีกครั้ง",
+    noConnection: "เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ ตรวจสอบอินเทอร์เน็ต",
+  },
+  en: {
+    // Nav
+    home: "Home", scan: "Scan", transactions: "Transactions",
+    analysis: "Analysis", importCSV: "Import CSV", settings: "Settings",
+    // Home
+    thisMonth: "This Month's Overview", recentTx: "Recent Transactions",
+    noTransactions: "No transactions yet",
+    // Scan
+    scanSlip: "Scan Bank Slip", takePhoto: "Take Photo",
+    fromLibrary: "Choose from Library", scanResult: "Scan Result",
+    sender: "Sender", receiver: "Receiver", amount: "Amount",
+    bank: "Bank", date: "Date", type: "Type",
+    income: "Income", expense: "Expense", unspecified: "Unknown",
+    savedHint: "Saved — tap Edit if data is incorrect", editData: "Edit Data",
+    needCamera: "Camera access required", needLibrary: "Photo library access required",
+    // Loading stages
+    stage0: "Uploading photo...", stage1: "Analyzing slip...",
+    stage2: "AI is reading data...", stage3: "Almost done...",
+    // Transactions
+    noData: "No transactions in the system", edit: "Edit", delete: "Delete",
+    deleteTitle: "Delete Transaction", cancel: "Cancel",
+    noDate: "No date", unknownTx: "Unknown",
+    // Analysis
+    analysisTitle: "Spending Analysis", aiAnalyzing: "AI is analyzing...",
+    noTips: "No tips available", refresh: "Refresh",
+    // Edit
+    senderLabel: "Sender", receiverLabel: "Receiver", amountLabel: "Amount (฿)",
+    bankLabel: "Bank", dateLabel: "Date (YYYY-MM-DD)", noteLabel: "Note",
+    typeLabel: "Type", categoryLabel: "Category", save: "Save",
+    invalidAmount: "Please enter a valid amount",
+    // Import
+    importTitle: "Import Bank Statement",
+    importDesc: "Download a CSV from your bank app and import it for automatic analysis.",
+    supportedBanks: "Supported Banks", howTo: "How to Download Statement",
+    chooseFile: "Choose CSV File", importing: "Analyzing data...",
+    importSuccess: "Import Successful!", viewAll: "View All Transactions",
+    importFail: "Import Failed", wrongFile: "Please select a .csv file from your bank app",
+    // Settings
+    settingsTitle: "Settings", language: "Language", theme: "Theme",
+    themeLight: "Light", themeDark: "Dark", themeAuto: "Auto",
+    account: "Account", signOut: "Sign Out", signOutConfirm: "Sign out of your account?",
+    guest: "Guest",
+    // Login
+    loginTitle: "MoneySnap", loginSubtitle: "Track spending with AI",
+    signInGoogle: "Sign in with Google", signInApple: "Sign in with Apple",
+    continueGuest: "Continue without account",
+    appleIosOnly: "Apple Sign In is iOS only",
+    // Errors
+    error: "Error", loadFailed: "Failed to load data",
+    saveFailed: "Save failed. Please try again",
+    deleteFailed: "Delete failed. Please try again",
+    scanFailed: "An error occurred",
+    rateLimited: "AI is busy. Wait 1 minute and try again.",
+    timeoutError: "Server took too long. Please try again.",
+    noConnection: "Cannot connect to server. Check your internet.",
+  },
+};

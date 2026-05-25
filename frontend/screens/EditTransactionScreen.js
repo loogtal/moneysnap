@@ -1,156 +1,150 @@
 import React, { useEffect, useState } from "react";
 import {
-  View,
-  Text,
-  TextInput,
-  ScrollView,
-  StyleSheet,
-  TouchableOpacity,
-  ActivityIndicator,
-  Alert,
+  View, Text, TextInput, ScrollView, StyleSheet,
+  TouchableOpacity, ActivityIndicator, Alert,
 } from "react-native";
 import axios from "axios";
 import { API_BASE_URL } from "../config";
+import { useApp } from "../contexts/AppContext";
 
 const CATEGORIES = ["food", "shopping", "transport", "bills", "health", "entertainment", "other"];
 const TYPES = ["expense", "income"];
 
 export default function EditTransactionScreen({ route, navigation }) {
+  const { colors, t } = useApp();
   const { transactionId } = route.params;
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
-    sender_name: "",
-    receiver_name: "",
-    amount: "",
-    bank_name: "",
-    transaction_type: "expense",
-    category: "other",
-    note: "",
-    transaction_date: "",
+    sender_name: "", receiver_name: "", amount: "", bank_name: "",
+    transaction_type: "expense", category: "other", note: "", transaction_date: "",
   });
 
-  useEffect(() => {
-    loadTransaction();
-  }, []);
+  useEffect(() => { loadTx(); }, []);
 
-  async function loadTransaction() {
+  async function loadTx() {
     try {
       const res = await axios.get(`${API_BASE_URL}/transactions/${transactionId}`);
-      const t = res.data;
+      const tx = res.data;
       setForm({
-        sender_name: t.sender_name || "",
-        receiver_name: t.receiver_name || "",
-        amount: t.amount != null ? String(t.amount) : "",
-        bank_name: t.bank_name || "",
-        transaction_type: t.transaction_type || "expense",
-        category: t.category || "other",
-        note: t.note || "",
-        transaction_date: t.transaction_date ? t.transaction_date.slice(0, 10) : "",
+        sender_name: tx.sender_name || "",
+        receiver_name: tx.receiver_name || "",
+        amount: tx.amount != null ? String(tx.amount) : "",
+        bank_name: tx.bank_name || "",
+        transaction_type: tx.transaction_type || "expense",
+        category: tx.category || "other",
+        note: tx.note || "",
+        transaction_date: tx.transaction_date ? tx.transaction_date.slice(0, 10) : "",
       });
     } catch {
-      Alert.alert("ข้อผิดพลาด", "โหลดข้อมูลไม่สำเร็จ");
+      Alert.alert(t("error"), t("loadFailed"));
       navigation.goBack();
     } finally {
       setLoading(false);
     }
   }
 
-  async function handleSave() {
+  async function save() {
     const amount = parseFloat(form.amount);
     if (isNaN(amount) || amount < 0) {
-      Alert.alert("ข้อผิดพลาด", "กรุณาระบุจำนวนเงินที่ถูกต้อง");
+      Alert.alert(t("error"), t("invalidAmount"));
       return;
     }
+    setSaving(true);
     try {
-      setSaving(true);
-      await axios.patch(`${API_BASE_URL}/transactions/${transactionId}`, {
-        ...form,
-        amount,
-      });
+      await axios.patch(`${API_BASE_URL}/transactions/${transactionId}`, { ...form, amount });
       navigation.goBack();
     } catch {
-      Alert.alert("ข้อผิดพลาด", "บันทึกไม่สำเร็จ โปรดลองอีกครั้ง");
+      Alert.alert(t("error"), t("saveFailed"));
     } finally {
       setSaving(false);
     }
   }
 
   function set(field) {
-    return (value) => setForm((prev) => ({ ...prev, [field]: value }));
+    return (val) => setForm((p) => ({ ...p, [field]: val }));
   }
 
-  if (loading) {
-    return <ActivityIndicator style={styles.center} size="large" />;
-  }
+  const s = styles(colors);
+
+  if (loading) return <ActivityIndicator style={s.center} size="large" color={colors.primary} />;
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-      <Field label="ผู้ส่ง" value={form.sender_name} onChangeText={set("sender_name")} />
-      <Field label="ผู้รับ" value={form.receiver_name} onChangeText={set("receiver_name")} />
-      <Field label="จำนวนเงิน (฿)" value={form.amount} onChangeText={set("amount")} keyboardType="decimal-pad" />
-      <Field label="ธนาคาร" value={form.bank_name} onChangeText={set("bank_name")} />
-      <Field label="วันที่ (YYYY-MM-DD)" value={form.transaction_date} onChangeText={set("transaction_date")} />
-      <Field label="หมายเหตุ" value={form.note} onChangeText={set("note")} multiline />
+    <ScrollView style={s.container} contentContainerStyle={s.content} keyboardShouldPersistTaps="handled">
+      <Field label={t("senderLabel")} value={form.sender_name} onChange={set("sender_name")} colors={colors} />
+      <Field label={t("receiverLabel")} value={form.receiver_name} onChange={set("receiver_name")} colors={colors} />
+      <Field label={t("amountLabel")} value={form.amount} onChange={set("amount")} keyboard="decimal-pad" colors={colors} />
+      <Field label={t("bankLabel")} value={form.bank_name} onChange={set("bank_name")} colors={colors} />
+      <Field label={t("dateLabel")} value={form.transaction_date} onChange={set("transaction_date")} colors={colors} />
+      <Field label={t("noteLabel")} value={form.note} onChange={set("note")} multiline colors={colors} />
 
-      <Text style={styles.label}>ประเภท</Text>
-      <View style={styles.chipRow}>
-        {TYPES.map((t) => (
-          <Chip key={t} label={t === "expense" ? "รายจ่าย" : "รายรับ"} active={form.transaction_type === t} onPress={() => set("transaction_type")(t)} />
+      <Text style={s.label}>{t("typeLabel")}</Text>
+      <View style={s.chipRow}>
+        {TYPES.map((tp) => (
+          <Chip key={tp} label={tp === "expense" ? t("expense") : t("income")} active={form.transaction_type === tp} onPress={set("transaction_type")(tp)} colors={colors} />
         ))}
       </View>
 
-      <Text style={styles.label}>หมวดหมู่</Text>
-      <View style={styles.chipRow}>
+      <Text style={s.label}>{t("categoryLabel")}</Text>
+      <View style={s.chipRow}>
         {CATEGORIES.map((c) => (
-          <Chip key={c} label={c} active={form.category === c} onPress={() => set("category")(c)} />
+          <Chip key={c} label={c} active={form.category === c} onPress={set("category")(c)} colors={colors} />
         ))}
       </View>
 
-      <TouchableOpacity style={styles.saveButton} onPress={handleSave} disabled={saving}>
-        {saving ? <ActivityIndicator color="#fff" /> : <Text style={styles.saveText}>บันทึก</Text>}
+      <TouchableOpacity style={[s.saveBtn, { backgroundColor: colors.primary }]} onPress={save} disabled={saving}>
+        {saving ? <ActivityIndicator color="#fff" /> : <Text style={s.saveBtnText}>{t("save")}</Text>}
       </TouchableOpacity>
     </ScrollView>
   );
 }
 
-function Field({ label, value, onChangeText, keyboardType, multiline }) {
+function Field({ label, value, onChange, keyboard, multiline, colors }) {
   return (
-    <View style={styles.fieldGroup}>
-      <Text style={styles.label}>{label}</Text>
+    <View style={{ marginBottom: 14 }}>
+      <Text style={{ fontSize: 14, fontWeight: "600", color: colors.subtext, marginBottom: 6 }}>{label}</Text>
       <TextInput
-        style={[styles.input, multiline && styles.multiline]}
+        style={{
+          borderWidth: 1, borderColor: colors.inputBorder, borderRadius: 8,
+          paddingHorizontal: 12, paddingVertical: 8, fontSize: 15,
+          backgroundColor: colors.inputBg, color: colors.text,
+          ...(multiline ? { height: 72, textAlignVertical: "top" } : {}),
+        }}
         value={value}
-        onChangeText={onChangeText}
-        keyboardType={keyboardType || "default"}
+        onChangeText={onChange}
+        keyboardType={keyboard || "default"}
         multiline={multiline}
         numberOfLines={multiline ? 3 : 1}
+        placeholderTextColor={colors.subtext}
       />
     </View>
   );
 }
 
-function Chip({ label, active, onPress }) {
+function Chip({ label, active, onPress, colors }) {
   return (
-    <TouchableOpacity style={[styles.chip, active && styles.chipActive]} onPress={onPress}>
-      <Text style={[styles.chipText, active && styles.chipTextActive]}>{label}</Text>
+    <TouchableOpacity
+      style={{
+        paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20,
+        borderWidth: 1,
+        borderColor: active ? colors.primary : colors.chipBorder,
+        backgroundColor: active ? colors.primary : colors.chip,
+      }}
+      onPress={onPress}
+    >
+      <Text style={{ fontSize: 13, color: active ? "#fff" : colors.chipText, fontWeight: active ? "700" : "400" }}>
+        {label}
+      </Text>
     </TouchableOpacity>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff" },
+const styles = (c) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: c.bg },
   content: { padding: 16, paddingBottom: 40 },
   center: { flex: 1, justifyContent: "center" },
-  fieldGroup: { marginBottom: 14 },
-  label: { fontSize: 14, fontWeight: "600", color: "#444", marginBottom: 6 },
-  input: { borderWidth: 1, borderColor: "#d1d5db", borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, fontSize: 15, backgroundColor: "#f9fafb" },
-  multiline: { height: 72, textAlignVertical: "top" },
+  label: { fontSize: 14, fontWeight: "600", color: c.subtext, marginBottom: 6 },
   chipRow: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 16 },
-  chip: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, borderWidth: 1, borderColor: "#d1d5db", backgroundColor: "#f3f4f6" },
-  chipActive: { backgroundColor: "#2d6cdf", borderColor: "#2d6cdf" },
-  chipText: { fontSize: 13, color: "#555" },
-  chipTextActive: { color: "#fff", fontWeight: "700" },
-  saveButton: { backgroundColor: "#2d6cdf", borderRadius: 10, paddingVertical: 14, alignItems: "center", marginTop: 12 },
-  saveText: { color: "#fff", fontSize: 16, fontWeight: "700" },
+  saveBtn: { borderRadius: 10, paddingVertical: 14, alignItems: "center", marginTop: 12 },
+  saveBtnText: { color: "#fff", fontSize: 16, fontWeight: "700" },
 });
