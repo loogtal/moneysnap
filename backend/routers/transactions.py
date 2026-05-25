@@ -1,13 +1,15 @@
 from datetime import datetime
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from pydantic import BaseModel
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from backend.database import get_db
 from backend.models import Transaction
+from backend.services.category_service import categorize
+from backend.services.csv_parser import parse_bank_csv
 
 router = APIRouter()
 
@@ -108,3 +110,35 @@ def delete_transaction(transaction_id: int, db: Session = Depends(get_db)):
     db.delete(transaction)
     db.commit()
     return {"ok": True}
+
+
+@router.post("/import-csv")
+async def import_csv(file: UploadFile = File(...), db: Session = Depends(get_db)):
+    if not file.filename or not file.filename.lower().endswith(".csv"):
+        raise HTTPException(status_code=400, detail="ต้องอัปโหลดไฟล์ .csv เท่านั้น")
+
+    content = await file.read()
+    rows = parse_bank_csv(content)
+
+    if not rows:
+        raise HTTPException(status_code=422, detail="ไม่พบข้อมูลในไฟล์ หรือรูปแบบ CSV ไม่รองรับ")
+
+    imported = 0
+    for row in rows:
+        description = row.get("note") or ""
+        category = categorize(description)
+        transaction = Transaction(
+            amount=row["amount"],
+            transaction_type=row["transaction_type"],
+            transaction_date=row["transaction_date"],
+            bank_name=row.get("bank_name"),
+            note=description,
+            category=category,
+            sender_name=row.get("sender_name"),
+            receiver_name=row.get("receiver_name"),
+        )
+        db.add(transaction)
+        imported += 1
+
+    db.commit()
+    return {"imported": imported, "bank": rows[0].get("bank_name") if rows else None}

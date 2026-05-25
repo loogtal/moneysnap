@@ -7,6 +7,8 @@ from backend.services.ai_service import get_spending_tips
 
 router = APIRouter()
 
+_tips_cache: dict[str, str] = {}
+
 
 @router.get("/monthly")
 def monthly_summary(db: Session = Depends(get_db)):
@@ -22,6 +24,9 @@ def ai_tips(payload: dict, db: Session = Depends(get_db)):
     if not month:
         raise HTTPException(status_code=400, detail="ต้องระบุเดือนในรูปแบบ YYYY-MM")
 
+    if month in _tips_cache:
+        return {"month": month, "tips": _tips_cache[month], "cached": True}
+
     result = db.execute(
         text(
             "SELECT category, SUM(amount) AS total, COUNT(*) AS count "
@@ -32,4 +37,5 @@ def ai_tips(payload: dict, db: Session = Depends(get_db)):
     )
     monthly_data = [dict(row._mapping) for row in result]
     tips = get_spending_tips({"month": month, "categories": monthly_data})
+    _tips_cache[month] = tips
     return {"month": month, "tips": tips, "summary": monthly_data}

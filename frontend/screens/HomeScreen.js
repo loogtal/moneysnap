@@ -11,15 +11,18 @@ export default function HomeScreen({ navigation }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    axios.get(`${API_BASE_URL.replace("/api", "")}/health`).catch(() => {});
     loadSummary();
   }, []);
 
   async function loadSummary() {
     try {
-      const response = await axios.get(`${API_BASE_URL}/analysis/monthly`);
-      const transactionsRes = await axios.get(`${API_BASE_URL}/transactions`, { params: { page_size: 5 } });
-      setSummary(response.data.summary || []);
-      setRecent(transactionsRes.data.results || []);
+      const [summaryRes, txRes] = await Promise.all([
+        axios.get(`${API_BASE_URL}/analysis/monthly`),
+        axios.get(`${API_BASE_URL}/transactions`, { params: { page_size: 5 } }),
+      ]);
+      setSummary(summaryRes.data.summary || []);
+      setRecent(txRes.data.results || []);
     } catch (error) {
       console.warn(error);
     } finally {
@@ -36,6 +39,7 @@ export default function HomeScreen({ navigation }) {
         <Button title="สแกนสลิป" onPress={() => navigation.navigate("Scan")} />
         <Button title="ธุรกรรม" onPress={() => navigation.navigate("Transactions")} />
         <Button title="วิเคราะห์" onPress={() => navigation.navigate("Analysis")} />
+        <Button title="นำเข้า CSV" onPress={() => navigation.navigate("Import")} />
       </View>
 
       {loading ? (

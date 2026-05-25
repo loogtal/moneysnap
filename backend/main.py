@@ -28,3 +28,8 @@ def startup_event():
 app.include_router(slips.router, prefix="/api/slips", tags=["slips"])
 app.include_router(transactions.router, prefix="/api/transactions", tags=["transactions"])
 app.include_router(analysis.router, prefix="/api/analysis", tags=["analysis"])
+
+
+@app.get("/health")
+def health():
+    return {"ok": True}

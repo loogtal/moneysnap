@@ -3,9 +3,28 @@
     "name": "MoneySnap",
     "slug": "moneysnap",
     "version": "1.0.0",
-    "sdkVersion": "49.0.0",
-    "platforms": ["ios", "android"],
-    "assetBundlePatterns": ["**/*"],
-    "orientation": "portrait"
+    "sdkVersion": "54.0.0",
+    "platforms": [
+      "ios",
+      "android"
+    ],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "orientation": "portrait",
+    "extra": {
+      "eas": {
+        "projectId": "bfda7744-0124-4b9f-944c-6dae3813b6eb"
+      }
+    },
+    "android": {
+      "package": "com.liserosaliz.moneysnap"
+    },
+    "ios": {
+      "bundleIdentifier": "com.liserosaliz.moneysnap",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    }
   }
 }
