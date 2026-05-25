@@ -70,10 +70,17 @@ export default function ScanScreen({ navigation }) {
     } catch (err) {
       const status = err?.response?.status;
       const detail = err?.response?.data?.detail ?? err?.message ?? "";
-      let msg = t("scanFailed");
-      if (status === 429 || detail.includes("quota")) msg = t("rateLimited");
-      else if (err?.code === "ECONNABORTED") msg = t("timeoutError");
-      else if (!status) msg = t("noConnection");
+      let msg;
+      if (status === 429 || detail.includes("429") || detail.includes("quota") || detail.includes("โควต้า")) {
+        msg = t("rateLimited");
+      } else if (err?.code === "ECONNABORTED" || detail.includes("timeout")) {
+        msg = t("timeoutError");
+      } else if (!status) {
+        msg = t("noConnection");
+      } else {
+        msg = detail || t("scanFailed");
+      }
+      console.warn("Scan error", status, detail);
       Alert.alert(t("scanFailed"), msg);
     } finally {
       stopTimer();

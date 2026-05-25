@@ -32,14 +32,18 @@ def _gemini_post(api_key: str, payload: dict, max_retries: int = 3) -> dict:
             timeout=60,
         )
         if resp.status_code == 429:
+            wait = 2 ** (attempt + 1)
+            logger.warning("Gemini 429 — attempt %d/%d, retrying in %ds", attempt + 1, max_retries, wait)
             if attempt < max_retries - 1:
-                wait = 2 ** (attempt + 1)
-                logger.warning("Gemini 429 — retrying in %ds (attempt %d)", wait, attempt + 1)
                 time.sleep(wait)
                 continue
+            raise RuntimeError("Gemini API เกินโควต้า กรุณารอ 1 นาทีแล้วลองใหม่")
+        if resp.status_code == 400:
+            raise RuntimeError(f"Gemini API key ไม่ถูกต้อง หรือ request ผิดพลาด ({resp.status_code}): {resp.text[:200]}")
+        if resp.status_code == 403:
+            raise RuntimeError("Gemini API key ไม่มีสิทธิ์ใช้โมเดลนี้ ตรวจสอบ GOOGLE_API_KEY ใน Railway")
         resp.raise_for_status()
         return resp.json()
-    raise RuntimeError("Gemini API เกินโควต้า กรุณาลองอีกครั้งใน 1 นาที")
 
 
 def parse_date(date_str: str):
