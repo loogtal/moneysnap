@@ -1,5 +1,8 @@
 import React from "react";
+import axios from "axios";
 import { NavigationContainer } from "@react-navigation/native";
+
+axios.defaults.timeout = 60000;
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import HomeScreen from "./screens/HomeScreen";
 import ScanScreen from "./screens/ScanScreen";

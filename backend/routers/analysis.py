@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-from backend.database import get_db
+from backend.database import get_db, _is_sqlite
 from backend.services.ai_service import get_spending_tips
 
 router = APIRouter()
@@ -27,11 +27,12 @@ def ai_tips(payload: dict, db: Session = Depends(get_db)):
     if month in _tips_cache:
         return {"month": month, "tips": _tips_cache[month], "cached": True}
 
+    date_expr = "strftime('%Y-%m', transaction_date)" if _is_sqlite else "to_char(transaction_date, 'YYYY-MM')"
     result = db.execute(
         text(
-            "SELECT category, SUM(amount) AS total, COUNT(*) AS count "
-            "FROM transactions WHERE strftime('%Y-%m', transaction_date) = :month "
-            "GROUP BY category"
+            f"SELECT category, SUM(amount) AS total, COUNT(*) AS count "
+            f"FROM transactions WHERE {date_expr} = :month "
+            f"GROUP BY category"
         ),
         {"month": month},
     )

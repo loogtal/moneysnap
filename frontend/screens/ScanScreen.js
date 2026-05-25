@@ -22,7 +22,7 @@ export default function ScanScreen({ navigation }) {
   async function pickImage() {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) return Alert.alert("ต้องอนุญาตการเข้าถึงรูปภาพ");
-    const picker = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, quality: 0.8 });
+    const picker = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ["images"], quality: 0.8 });
     if (picker.canceled) return;
     const uri = picker.assets[0].uri;
     setImage(uri);

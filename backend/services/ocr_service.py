@@ -3,6 +3,7 @@ import json
 import logging
 import os
 import re
+import time
 from datetime import datetime
 from pathlib import Path
 
@@ -18,6 +19,25 @@ MEDIA_TYPES = {
     ".webp": "image/webp",
 }
 GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent"
+
+
+def _gemini_post(api_key: str, payload: dict, max_retries: int = 3) -> dict:
+    for attempt in range(max_retries):
+        resp = httpx.post(
+            GEMINI_URL,
+            params={"key": api_key},
+            json=payload,
+            timeout=60,
+        )
+        if resp.status_code == 429:
+            if attempt < max_retries - 1:
+                wait = 2 ** (attempt + 1)
+                logger.warning("Gemini 429 — retrying in %ds (attempt %d)", wait, attempt + 1)
+                time.sleep(wait)
+                continue
+        resp.raise_for_status()
+        return resp.json()
+    raise RuntimeError("Gemini API เกินโควต้า กรุณาลองอีกครั้งใน 1 นาที")
 
 
 def parse_date(date_str: str):
@@ -79,14 +99,8 @@ def extract_slip_data(image_path: str) -> dict:
     }
 
     try:
-        resp = httpx.post(
-            GEMINI_URL,
-            params={"key": api_key},
-            json=payload,
-            timeout=30,
-        )
-        resp.raise_for_status()
-        raw = resp.json()["candidates"][0]["content"]["parts"][0]["text"].strip()
+        data = _gemini_post(api_key, payload)
+        raw = data["candidates"][0]["content"]["parts"][0]["text"].strip()
         logger.info("Gemini response: %s", raw)
         raw = re.sub(r"^```(?:json)?\s*", "", raw)
         raw = re.sub(r"\s*```$", "", raw)

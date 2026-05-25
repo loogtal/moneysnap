@@ -1,10 +1,28 @@
 import os
+import time
 from typing import Dict
 
 import httpx
 
 API_KEY = os.environ.get("GOOGLE_API_KEY", "")
 GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent"
+
+
+def _post_with_retry(payload: dict, max_retries: int = 3) -> dict:
+    for attempt in range(max_retries):
+        resp = httpx.post(
+            GEMINI_URL,
+            params={"key": API_KEY},
+            json=payload,
+            timeout=60,
+        )
+        if resp.status_code == 429:
+            if attempt < max_retries - 1:
+                time.sleep(2 ** (attempt + 1))
+                continue
+        resp.raise_for_status()
+        return resp.json()
+    raise RuntimeError("rate_limited")
 
 
 def get_spending_tips(monthly_data: Dict) -> str:
@@ -25,13 +43,7 @@ def get_spending_tips(monthly_data: Dict) -> str:
 ตอบเป็นภาษาไทย สั้น กระชับ เป็นมิตร"""
 
     try:
-        resp = httpx.post(
-            GEMINI_URL,
-            params={"key": API_KEY},
-            json={"contents": [{"parts": [{"text": prompt}]}]},
-            timeout=30,
-        )
-        resp.raise_for_status()
-        return resp.json()["candidates"][0]["content"]["parts"][0]["text"].strip()
+        data = _post_with_retry({"contents": [{"parts": [{"text": prompt}]}]})
+        return data["candidates"][0]["content"]["parts"][0]["text"].strip()
     except Exception:
         return "ขออภัย เกิดข้อผิดพลาดในการเรียกใช้งาน AI โปรดลองอีกครั้ง"

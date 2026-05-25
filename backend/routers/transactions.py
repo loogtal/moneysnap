@@ -3,7 +3,7 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from pydantic import BaseModel
-from sqlalchemy import func
+from sqlalchemy import extract
 from sqlalchemy.orm import Session
 
 from backend.database import get_db
@@ -53,10 +53,10 @@ def list_transactions(
     query = db.query(Transaction)
 
     if year and month:
-        query = query.filter(func.strftime("%Y", Transaction.transaction_date) == str(year))
-        query = query.filter(func.strftime("%m", Transaction.transaction_date) == f"{month:02d}")
+        query = query.filter(extract("year", Transaction.transaction_date) == year)
+        query = query.filter(extract("month", Transaction.transaction_date) == month)
     elif year:
-        query = query.filter(func.strftime("%Y", Transaction.transaction_date) == str(year))
+        query = query.filter(extract("year", Transaction.transaction_date) == year)
 
     if category:
         query = query.filter(Transaction.category == category)
