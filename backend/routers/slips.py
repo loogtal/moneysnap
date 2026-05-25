@@ -24,7 +24,12 @@ async def scan_slip(file: UploadFile = File(...), db: Session = Depends(get_db))
     with file_path.open("wb") as buffer:
         buffer.write(await file.read())
 
-    slip_data = extract_slip_data(str(file_path))
+    try:
+        slip_data = extract_slip_data(str(file_path))
+    except RuntimeError as e:
+        raise HTTPException(status_code=503, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"วิเคราะห์สลิปไม่สำเร็จ: {e}")
     category = categorize(slip_data["raw_text"])
     transaction_type = slip_data.get("transaction_type", "expense")
 
