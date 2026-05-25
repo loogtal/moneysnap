@@ -1,4 +1,5 @@
 import base64
+import io
 import json
 import logging
 import os
@@ -8,6 +9,7 @@ from datetime import datetime
 from pathlib import Path
 
 import httpx
+from PIL import Image
 
 logger = logging.getLogger(__name__)
 
@@ -71,8 +73,16 @@ def extract_slip_data(image_path: str) -> dict:
     suffix = Path(image_path).suffix.lower()
     media_type = MEDIA_TYPES.get(suffix, "image/jpeg")
 
-    with open(image_path, "rb") as f:
-        image_b64 = base64.b64encode(f.read()).decode()
+    img = Image.open(image_path)
+    if img.mode not in ("RGB", "L"):
+        img = img.convert("RGB")
+    max_side = 1280
+    if max(img.width, img.height) > max_side:
+        img.thumbnail((max_side, max_side), Image.LANCZOS)
+    buf = io.BytesIO()
+    img.save(buf, format="JPEG", quality=75, optimize=True)
+    image_b64 = base64.b64encode(buf.getvalue()).decode()
+    media_type = "image/jpeg"
 
     prompt = """อ่านสลิปธนาคารไทยในภาพนี้แล้วสกัดข้อมูลให้ครบถ้วน
 

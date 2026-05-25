@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -14,15 +14,43 @@ import axios from "axios";
 import { API_BASE_URL } from "../config";
 import CategoryBadge from "../components/CategoryBadge";
 
+const BASE_URL = API_BASE_URL.replace("/api", "");
+
+const LOADING_STAGES = [
+  "กำลังส่งรูป...",
+  "กำลังวิเคราะห์สลิป...",
+  "AI กำลังอ่านข้อมูล...",
+  "เกือบเสร็จแล้ว...",
+];
+
 export default function ScanScreen({ navigation }) {
   const [image, setImage] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [loadingStage, setLoadingStage] = useState(0);
   const [result, setResult] = useState(null);
+  const stageTimer = useRef(null);
+
+  useEffect(() => {
+    axios.get(`${BASE_URL}/health`, { timeout: 10000 }).catch(() => {});
+  }, []);
+
+  function startStageTimer() {
+    let stage = 0;
+    stageTimer.current = setInterval(() => {
+      stage = Math.min(stage + 1, LOADING_STAGES.length - 1);
+      setLoadingStage(stage);
+    }, 4000);
+  }
+
+  function stopStageTimer() {
+    clearInterval(stageTimer.current);
+    setLoadingStage(0);
+  }
 
   async function pickImage() {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) return Alert.alert("ต้องอนุญาตการเข้าถึงรูปภาพ");
-    const picker = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ["images"], quality: 0.8 });
+    const picker = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ["images"], quality: 0.5 });
     if (picker.canceled) return;
     const uri = picker.assets[0].uri;
     setImage(uri);
@@ -33,7 +61,7 @@ export default function ScanScreen({ navigation }) {
   async function takePhoto() {
     const permission = await ImagePicker.requestCameraPermissionsAsync();
     if (!permission.granted) return Alert.alert("ต้องอนุญาตการเข้าถึงกล้อง");
-    const picker = await ImagePicker.launchCameraAsync({ quality: 0.8 });
+    const picker = await ImagePicker.launchCameraAsync({ quality: 0.5 });
     if (picker.canceled) return;
     const uri = picker.assets[0].uri;
     setImage(uri);
@@ -44,18 +72,31 @@ export default function ScanScreen({ navigation }) {
   async function handleUpload(uri) {
     try {
       setLoading(true);
+      setLoadingStage(0);
+      startStageTimer();
       const fileName = uri.split("/").pop();
       const form = new FormData();
       form.append("file", { uri, name: fileName, type: "image/jpeg" });
       const response = await axios.post(`${API_BASE_URL}/slips/scan`, form, {
         headers: { "Content-Type": "multipart/form-data" },
+        timeout: 120000,
       });
       setResult(response.data);
     } catch (error) {
-      const detail = error?.response?.data?.detail || error?.message || "ไม่ทราบสาเหตุ";
+      const status = error?.response?.status;
+      const detail = error?.response?.data?.detail || error?.message || "";
+      let msg = "วิเคราะห์สลิปไม่สำเร็จ โปรดลองอีกครั้ง";
+      if (status === 429 || detail.includes("429") || detail.includes("quota")) {
+        msg = "AI ถูกใช้งานหนักเกินไป รอ 1 นาทีแล้วลองใหม่";
+      } else if (error?.code === "ECONNABORTED" || detail.includes("timeout")) {
+        msg = "เซิร์ฟเวอร์ใช้เวลานานเกินไป ลองอีกครั้ง (ครั้งถัดไปจะเร็วกว่านี้)";
+      } else if (!status) {
+        msg = "เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ ตรวจสอบอินเทอร์เน็ต";
+      }
       console.warn(error);
-      Alert.alert("เกิดข้อผิดพลาดในการสแกนสลิป", detail);
+      Alert.alert("เกิดข้อผิดพลาด", msg);
     } finally {
+      stopStageTimer();
       setLoading(false);
     }
   }
@@ -82,7 +123,7 @@ export default function ScanScreen({ navigation }) {
       {loading && (
         <View style={styles.loadingBox}>
           <ActivityIndicator size="large" color="#2d6cdf" />
-          <Text style={styles.loadingText}>กำลังวิเคราะห์สลิป...</Text>
+          <Text style={styles.loadingText}>{LOADING_STAGES[loadingStage]}</Text>
         </View>
       )}
 
