@@ -51,7 +51,7 @@ def extract_slip_data(image_path: str) -> dict:
     from google.generativeai.types import HarmCategory, HarmBlockThreshold
 
     genai.configure(api_key=api_key)
-    model = genai.GenerativeModel("gemini-2.0-flash")
+    model = genai.GenerativeModel("gemini-1.5-flash-latest")
 
     suffix = Path(image_path).suffix.lower()
     media_type = MEDIA_TYPES.get(suffix, "image/jpeg")

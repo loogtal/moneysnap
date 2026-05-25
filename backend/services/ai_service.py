@@ -11,7 +11,7 @@ def get_spending_tips(monthly_data: Dict) -> str:
     try:
         import google.generativeai as genai
         genai.configure(api_key=API_KEY)
-        model = genai.GenerativeModel("gemini-2.0-flash")
+        model = genai.GenerativeModel("gemini-1.5-flash-latest")
 
         prompt = f"""วิเคราะห์ข้อมูลการใช้จ่ายของผู้ใช้และให้คำแนะนำในการประหยัดเงิน:
 
