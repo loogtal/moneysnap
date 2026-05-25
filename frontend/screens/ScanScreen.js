@@ -1,0 +1,146 @@
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ActivityIndicator,
+  StyleSheet,
+  Image,
+  Alert,
+  ScrollView,
+} from "react-native";
+import * as ImagePicker from "expo-image-picker";
+import axios from "axios";
+import { API_BASE_URL } from "../config";
+import CategoryBadge from "../components/CategoryBadge";
+
+export default function ScanScreen({ navigation }) {
+  const [image, setImage] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState(null);
+
+  async function pickImage() {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) return Alert.alert("ต้องอนุญาตการเข้าถึงรูปภาพ");
+    const picker = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, quality: 0.8 });
+    if (picker.canceled) return;
+    const uri = picker.assets[0].uri;
+    setImage(uri);
+    setResult(null);
+    await handleUpload(uri);
+  }
+
+  async function takePhoto() {
+    const permission = await ImagePicker.requestCameraPermissionsAsync();
+    if (!permission.granted) return Alert.alert("ต้องอนุญาตการเข้าถึงกล้อง");
+    const picker = await ImagePicker.launchCameraAsync({ quality: 0.8 });
+    if (picker.canceled) return;
+    const uri = picker.assets[0].uri;
+    setImage(uri);
+    setResult(null);
+    await handleUpload(uri);
+  }
+
+  async function handleUpload(uri) {
+    try {
+      setLoading(true);
+      const fileName = uri.split("/").pop();
+      const form = new FormData();
+      form.append("file", { uri, name: fileName, type: "image/jpeg" });
+      const response = await axios.post(`${API_BASE_URL}/slips/scan`, form, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      setResult(response.data);
+    } catch (error) {
+      console.warn(error);
+      Alert.alert("เกิดข้อผิดพลาดในการสแกนสลิป", "โปรดลองอีกครั้ง");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function handleEdit() {
+    navigation.navigate("EditTransaction", { transactionId: result.id });
+    setResult(null);
+    setImage(null);
+  }
+
+  return (
+    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <Text style={styles.heading}>สแกนสลิปธนาคาร</Text>
+
+      <View style={styles.buttonGroup}>
+        <TouchableOpacity style={styles.btn} onPress={takePhoto}>
+          <Text style={styles.btnText}>ถ่ายรูปสลิป</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={[styles.btn, styles.btnOutline]} onPress={pickImage}>
+          <Text style={[styles.btnText, styles.btnTextOutline]}>เลือกจากคลัง</Text>
+        </TouchableOpacity>
+      </View>
+
+      {loading && (
+        <View style={styles.loadingBox}>
+          <ActivityIndicator size="large" color="#2d6cdf" />
+          <Text style={styles.loadingText}>กำลังวิเคราะห์สลิป...</Text>
+        </View>
+      )}
+
+      {image && !loading && <Image source={{ uri: image }} style={styles.image} />}
+
+      {result && (
+        <View style={styles.card}>
+          <View style={styles.cardHeader}>
+            <Text style={styles.cardTitle}>ผลการสแกน</Text>
+            <CategoryBadge category={result.category || "other"} />
+          </View>
+
+          <Row label="ผู้ส่ง" value={result.sender_name || "ไม่ระบุ"} />
+          <Row label="ผู้รับ" value={result.receiver_name || "ไม่ระบุ"} />
+          <Row label="จำนวนเงิน" value={`฿${result.amount?.toFixed(2) ?? "0.00"}`} highlight />
+          <Row label="ธนาคาร" value={result.bank_name || "ไม่ระบุ"} />
+          <Row label="วันที่" value={result.transaction_date ? result.transaction_date.slice(0, 10) : "ไม่ระบุ"} />
+          <Row label="ประเภท" value={result.transaction_type === "income" ? "รายรับ" : "รายจ่าย"} />
+
+          <Text style={styles.hint}>ข้อมูลบันทึกแล้ว — กดแก้ไขหากไม่ถูกต้อง</Text>
+
+          <TouchableOpacity style={styles.editBtn} onPress={handleEdit}>
+            <Text style={styles.editBtnText}>แก้ไขข้อมูล</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+    </ScrollView>
+  );
+}
+
+function Row({ label, value, highlight }) {
+  return (
+    <View style={styles.row}>
+      <Text style={styles.rowLabel}>{label}</Text>
+      <Text style={[styles.rowValue, highlight && styles.rowValueHighlight]}>{value}</Text>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: "#fff" },
+  content: { padding: 16, paddingBottom: 40 },
+  heading: { fontSize: 22, fontWeight: "bold", marginBottom: 20 },
+  buttonGroup: { flexDirection: "row", gap: 12, marginBottom: 20 },
+  btn: { flex: 1, backgroundColor: "#2d6cdf", borderRadius: 10, paddingVertical: 12, alignItems: "center" },
+  btnOutline: { backgroundColor: "#fff", borderWidth: 1.5, borderColor: "#2d6cdf" },
+  btnText: { color: "#fff", fontWeight: "700", fontSize: 15 },
+  btnTextOutline: { color: "#2d6cdf" },
+  loadingBox: { alignItems: "center", marginVertical: 24, gap: 10 },
+  loadingText: { color: "#555", fontSize: 14 },
+  image: { width: "100%", height: 240, borderRadius: 12, marginBottom: 16 },
+  card: { backgroundColor: "#f8f9ff", padding: 16, borderRadius: 14, borderWidth: 1, borderColor: "#e0e7ff" },
+  cardHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 14 },
+  cardTitle: { fontSize: 16, fontWeight: "700" },
+  row: { flexDirection: "row", justifyContent: "space-between", paddingVertical: 7, borderBottomWidth: 1, borderBottomColor: "#eee" },
+  rowLabel: { color: "#666", fontSize: 14 },
+  rowValue: { fontSize: 14, fontWeight: "600", color: "#222" },
+  rowValueHighlight: { color: "#2d6cdf", fontSize: 16 },
+  hint: { marginTop: 14, color: "#888", fontSize: 12, textAlign: "center" },
+  editBtn: { marginTop: 12, backgroundColor: "#f1f5f9", borderRadius: 8, paddingVertical: 10, alignItems: "center" },
+  editBtnText: { color: "#2d6cdf", fontWeight: "700" },
+});

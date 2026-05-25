@@ -1,0 +1,10 @@
+fastapi
+uvicorn[standard]
+easyocr
+opencv-python-headless
+pandas
+anthropic
+python-multipart
+sqlalchemy
+python-dotenv
+psycopg2-binary
