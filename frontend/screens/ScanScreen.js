@@ -52,8 +52,9 @@ export default function ScanScreen({ navigation }) {
       });
       setResult(response.data);
     } catch (error) {
+      const detail = error?.response?.data?.detail || error?.message || "ไม่ทราบสาเหตุ";
       console.warn(error);
-      Alert.alert("เกิดข้อผิดพลาดในการสแกนสลิป", "โปรดลองอีกครั้ง");
+      Alert.alert("เกิดข้อผิดพลาดในการสแกนสลิป", detail);
     } finally {
       setLoading(false);
     }

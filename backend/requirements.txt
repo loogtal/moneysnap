@@ -1,6 +1,6 @@
 fastapi
 uvicorn[standard]
-anthropic
+google-generativeai
 python-multipart
 sqlalchemy
 python-dotenv
