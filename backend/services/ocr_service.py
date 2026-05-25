@@ -11,6 +11,8 @@ from pathlib import Path
 import httpx
 from PIL import Image
 
+from backend.services.gemini_limiter import acquire
+
 logger = logging.getLogger(__name__)
 
 MEDIA_TYPES = {
@@ -23,8 +25,9 @@ MEDIA_TYPES = {
 GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent"
 
 
-def _gemini_post(api_key: str, payload: dict, max_retries: int = 3) -> dict:
+def _gemini_post(api_key: str, payload: dict, max_retries: int = 2) -> dict:
     for attempt in range(max_retries):
+        acquire()  # enforce rate limit before every call
         resp = httpx.post(
             GEMINI_URL,
             params={"key": api_key},
@@ -32,16 +35,15 @@ def _gemini_post(api_key: str, payload: dict, max_retries: int = 3) -> dict:
             timeout=60,
         )
         if resp.status_code == 429:
-            wait = 2 ** (attempt + 1)
-            logger.warning("Gemini 429 — attempt %d/%d, retrying in %ds", attempt + 1, max_retries, wait)
             if attempt < max_retries - 1:
-                time.sleep(wait)
+                logger.warning("Gemini 429 — waiting 30s before retry")
+                time.sleep(30)
                 continue
             raise RuntimeError("Gemini API เกินโควต้า กรุณารอ 1 นาทีแล้วลองใหม่")
         if resp.status_code == 400:
-            raise RuntimeError(f"Gemini API key ไม่ถูกต้อง หรือ request ผิดพลาด ({resp.status_code}): {resp.text[:200]}")
+            raise RuntimeError(f"Gemini request error ({resp.status_code}): {resp.text[:200]}")
         if resp.status_code == 403:
-            raise RuntimeError("Gemini API key ไม่มีสิทธิ์ใช้โมเดลนี้ ตรวจสอบ GOOGLE_API_KEY ใน Railway")
+            raise RuntimeError("GOOGLE_API_KEY ไม่มีสิทธิ์ใช้โมเดลนี้ ตรวจสอบใน Railway Variables")
         resp.raise_for_status()
         return resp.json()
 

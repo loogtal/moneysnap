@@ -4,6 +4,13 @@ from sqlalchemy.sql import func
 from backend.database import Base
 
 
+class TipsCache(Base):
+    __tablename__ = "tips_cache"
+    month = Column(String, primary_key=True)
+    tips = Column(Text, nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+
 class Transaction(Base):
     __tablename__ = "transactions"
 

@@ -4,12 +4,15 @@ from typing import Dict
 
 import httpx
 
+from backend.services.gemini_limiter import acquire
+
 API_KEY = os.environ.get("GOOGLE_API_KEY", "")
 GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent"
 
 
-def _post_with_retry(payload: dict, max_retries: int = 3) -> dict:
+def _post_with_retry(payload: dict, max_retries: int = 2) -> dict:
     for attempt in range(max_retries):
+        acquire()  # enforce rate limit
         resp = httpx.post(
             GEMINI_URL,
             params={"key": API_KEY},
@@ -18,11 +21,11 @@ def _post_with_retry(payload: dict, max_retries: int = 3) -> dict:
         )
         if resp.status_code == 429:
             if attempt < max_retries - 1:
-                time.sleep(2 ** (attempt + 1))
+                time.sleep(30)
                 continue
+            raise RuntimeError("rate_limited")
         resp.raise_for_status()
         return resp.json()
-    raise RuntimeError("rate_limited")
 
 
 def get_spending_tips(monthly_data: Dict) -> str:
