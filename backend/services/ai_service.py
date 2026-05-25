@@ -1,18 +1,17 @@
 import os
 from typing import Dict
 
+import httpx
+
 API_KEY = os.environ.get("GOOGLE_API_KEY", "")
+GEMINI_URL = "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent"
 
 
 def get_spending_tips(monthly_data: Dict) -> str:
     if not API_KEY:
         return "ยังไม่สามารถเชื่อมต่อ AI ได้ โปรดตั้งค่า GOOGLE_API_KEY"
 
-    try:
-        from google import genai
-        client = genai.Client(api_key=API_KEY)
-
-        prompt = f"""วิเคราะห์ข้อมูลการใช้จ่ายของผู้ใช้และให้คำแนะนำในการประหยัดเงิน:
+    prompt = f"""วิเคราะห์ข้อมูลการใช้จ่ายของผู้ใช้และให้คำแนะนำในการประหยัดเงิน:
 
 ข้อมูลการใช้จ่ายเดือนนี้:
 {monthly_data}
@@ -25,10 +24,14 @@ def get_spending_tips(monthly_data: Dict) -> str:
 
 ตอบเป็นภาษาไทย สั้น กระชับ เป็นมิตร"""
 
-        response = client.models.generate_content(
-            model="gemini-1.5-flash",
-            contents=prompt,
+    try:
+        resp = httpx.post(
+            GEMINI_URL,
+            params={"key": API_KEY},
+            json={"contents": [{"parts": [{"text": prompt}]}]},
+            timeout=30,
         )
-        return response.text.strip()
+        resp.raise_for_status()
+        return resp.json()["candidates"][0]["content"]["parts"][0]["text"].strip()
     except Exception:
         return "ขออภัย เกิดข้อผิดพลาดในการเรียกใช้งาน AI โปรดลองอีกครั้ง"

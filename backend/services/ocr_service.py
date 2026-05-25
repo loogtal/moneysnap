@@ -1,9 +1,12 @@
+import base64
 import json
 import logging
 import os
 import re
 from datetime import datetime
 from pathlib import Path
+
+import httpx
 
 logger = logging.getLogger(__name__)
 
@@ -14,13 +17,13 @@ MEDIA_TYPES = {
     ".gif": "image/gif",
     ".webp": "image/webp",
 }
+GEMINI_URL = "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent"
 
 
 def parse_date(date_str: str):
     if not date_str:
         return None
-    date_str = str(date_str).strip().replace("-", "/").replace(".", "/")
-    date_str = date_str.split(" ")[0]
+    date_str = str(date_str).strip().replace("-", "/").replace(".", "/").split(" ")[0]
     parts = date_str.split("/")
     try:
         if len(parts) == 3:
@@ -45,16 +48,11 @@ def extract_slip_data(image_path: str) -> dict:
     if not api_key:
         raise RuntimeError("ไม่พบ GOOGLE_API_KEY — กรุณาตั้งค่าใน Railway environment variables")
 
-    from google import genai
-    from google.genai import types
-
-    client = genai.Client(api_key=api_key)
-
     suffix = Path(image_path).suffix.lower()
     media_type = MEDIA_TYPES.get(suffix, "image/jpeg")
 
     with open(image_path, "rb") as f:
-        image_data = f.read()
+        image_b64 = base64.b64encode(f.read()).decode()
 
     prompt = """อ่านสลิปธนาคารไทยในภาพนี้แล้วสกัดข้อมูลให้ครบถ้วน
 
@@ -69,21 +67,26 @@ def extract_slip_data(image_path: str) -> dict:
   "raw_text": "ข้อความทั้งหมดที่อ่านได้จากสลิป"
 }
 
-กฎสำคัญ:
-- amount: เงินที่โอน/รับ ไม่ใช่ยอดคงเหลือ
-- date_str: แปลงเป็น DD/MM/YYYY เสมอ ถ้าปีเป็นพ.ศ.ให้ลบ 543
-- transaction_type: income=รับเงิน, expense=จ่าย/โอนออก
-- raw_text: คัดลอกข้อความทั้งหมดในสลิป"""
+กฎ: amount=เงินโอนไม่ใช่ยอดคงเหลือ, date_str=DD/MM/YYYY (ลบ543ถ้าพ.ศ.), transaction_type=income/expense"""
+
+    payload = {
+        "contents": [{
+            "parts": [
+                {"inline_data": {"mime_type": media_type, "data": image_b64}},
+                {"text": prompt},
+            ]
+        }]
+    }
 
     try:
-        response = client.models.generate_content(
-            model="gemini-1.5-flash",
-            contents=[
-                types.Part.from_bytes(data=image_data, mime_type=media_type),
-                prompt,
-            ],
+        resp = httpx.post(
+            GEMINI_URL,
+            params={"key": api_key},
+            json=payload,
+            timeout=30,
         )
-        raw = response.text.strip()
+        resp.raise_for_status()
+        raw = resp.json()["candidates"][0]["content"]["parts"][0]["text"].strip()
         logger.info("Gemini response: %s", raw)
         raw = re.sub(r"^```(?:json)?\s*", "", raw)
         raw = re.sub(r"\s*```$", "", raw)
