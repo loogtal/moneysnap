@@ -9,15 +9,15 @@ import { API_BASE_URL } from "../config";
 import { useApp } from "../contexts/AppContext";
 
 const BANKS = [
-  { name: "KBank (กสิกรไทย)", color: "#00A850" },
-  { name: "SCB (ไทยพาณิชย์)", color: "#4B0082" },
-  { name: "Bangkok Bank (BBL)", color: "#003087" },
-  { name: "KTB (กรุงไทย)", color: "#009FDA" },
-  { name: "TTB (ทหารไทยธนชาต)", color: "#F37021" },
+  { nameTh: "KBank (กสิกรไทย)", nameEn: "KBank (Kasikorn)", color: "#00A850" },
+  { nameTh: "SCB (ไทยพาณิชย์)", nameEn: "SCB (Siam Commercial)", color: "#4B0082" },
+  { nameTh: "Bangkok Bank (BBL)", nameEn: "Bangkok Bank (BBL)", color: "#003087" },
+  { nameTh: "KTB (กรุงไทย)", nameEn: "KTB (Krungthai)", color: "#009FDA" },
+  { nameTh: "TTB (ทหารไทยธนชาต)", nameEn: "TTB (Thai Military Bank)", color: "#F37021" },
 ];
 
 export default function ImportScreen({ navigation }) {
-  const { colors, t } = useApp();
+  const { colors, t, language } = useApp();
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
 
@@ -58,19 +58,19 @@ export default function ImportScreen({ navigation }) {
       <View style={s.section}>
         <Text style={s.sectionLabel}>{t("supportedBanks")}</Text>
         {BANKS.map((b) => (
-          <View key={b.name} style={s.bankRow}>
+          <View key={b.nameEn} style={s.bankRow}>
             <View style={[s.dot, { backgroundColor: b.color }]} />
-            <Text style={s.bankName}>{b.name}</Text>
+            <Text style={s.bankName}>{language === "en" ? b.nameEn : b.nameTh}</Text>
           </View>
         ))}
       </View>
 
       <View style={s.stepsWrap}>
         <Text style={s.sectionLabel}>{t("howTo")}</Text>
-        <Step n="1" text="เปิดแอปธนาคาร → ไปที่ประวัติธุรกรรม" colors={colors} />
-        <Step n="2" text="เลือกช่วงเวลาที่ต้องการ" colors={colors} />
-        <Step n="3" text="กดส่งออก / Export → เลือก CSV" colors={colors} />
-        <Step n="4" text="กลับมาที่นี่แล้วกดปุ่มด้านล่าง" colors={colors} />
+        <Step n="1" text={t("importStep1")} colors={colors} />
+        <Step n="2" text={t("importStep2")} colors={colors} />
+        <Step n="3" text={t("importStep3")} colors={colors} />
+        <Step n="4" text={t("importStep4")} colors={colors} />
       </View>
 
       {loading ? (
@@ -89,7 +89,9 @@ export default function ImportScreen({ navigation }) {
           <Text style={s.resultIcon}>✅</Text>
           <Text style={s.resultTitle}>{t("importSuccess")}</Text>
           <Text style={s.resultDetail}>
-            เพิ่ม {result.imported} รายการ{result.bank ? ` จาก ${result.bank}` : ""}
+            {language === "en"
+              ? `Added ${result.imported} ${t("importedItems")}${result.bank ? ` ${t("importedFrom")} ${result.bank}` : ""}`
+              : `เพิ่ม ${result.imported} ${t("importedItems")}${result.bank ? ` ${t("importedFrom")} ${result.bank}` : ""}`}
           </Text>
           <TouchableOpacity style={[s.viewBtn, { backgroundColor: colors.success }]} onPress={() => navigation.navigate("Transactions")}>
             <Text style={s.viewBtnText}>{t("viewAll")}</Text>

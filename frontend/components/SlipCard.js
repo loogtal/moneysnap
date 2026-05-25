@@ -1,17 +1,19 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import CategoryBadge from "./CategoryBadge";
+import { useApp } from "../contexts/AppContext";
 
 export default function SlipCard({ transaction }) {
+  const { colors, t } = useApp();
   return (
-    <View style={styles.card}>
+    <View style={[styles.card, { backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border }]}>
       <View style={styles.row}>
-        <Text style={styles.title}>{transaction.receiver_name || "รายการไม่ระบุ"}</Text>
-        <Text style={styles.amount}>฿{transaction.amount?.toFixed(2) || "0.00"}</Text>
+        <Text style={[styles.title, { color: colors.text }]}>{transaction.receiver_name || t("unknownTx")}</Text>
+        <Text style={[styles.amount, { color: colors.primary }]}>฿{transaction.amount?.toFixed(2) || "0.00"}</Text>
       </View>
-      <Text style={styles.subtitle}>{transaction.bank_name || "ธนาคารไม่ระบุ"}</Text>
+      <Text style={[styles.subtitle, { color: colors.subtext }]}>{transaction.bank_name || t("unknownBank")}</Text>
       <View style={styles.meta}>
-        <Text style={styles.date}>{transaction.transaction_date?.slice(0, 10) || "ไม่ระบุวันที่"}</Text>
+        <Text style={[styles.date, { color: colors.subtext }]}>{transaction.transaction_date?.slice(0, 10) || t("noDate")}</Text>
         <CategoryBadge category={transaction.category || "other"} />
       </View>
     </View>
@@ -19,11 +21,11 @@ export default function SlipCard({ transaction }) {
 }
 
 const styles = StyleSheet.create({
-  card: { backgroundColor: "#f7f7fa", padding: 14, borderRadius: 12, marginBottom: 12 },
+  card: { padding: 14, borderRadius: 12, marginBottom: 12 },
   row: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 6 },
   title: { fontSize: 16, fontWeight: "700" },
-  amount: { fontSize: 16, fontWeight: "700", color: "#2d6cdf" },
-  subtitle: { color: "#666" },
+  amount: { fontSize: 16, fontWeight: "700" },
+  subtitle: {},
   meta: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 8 },
-  date: { color: "#555" },
+  date: {},
 });

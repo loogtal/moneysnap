@@ -12,6 +12,7 @@ export const TR = {
     sender: "ผู้ส่ง", receiver: "ผู้รับ", amount: "จำนวนเงิน",
     bank: "ธนาคาร", date: "วันที่", type: "ประเภท",
     income: "รายรับ", expense: "รายจ่าย", unspecified: "ไม่ระบุ",
+    unknownBank: "ธนาคารไม่ระบุ",
     savedHint: "ข้อมูลบันทึกแล้ว — กดแก้ไขหากไม่ถูกต้อง", editData: "แก้ไขข้อมูล",
     needCamera: "ต้องอนุญาตการเข้าถึงกล้อง", needLibrary: "ต้องอนุญาตการเข้าถึงรูปภาพ",
     // Loading stages
@@ -24,6 +25,7 @@ export const TR = {
     // Analysis
     analysisTitle: "วิเคราะห์การใช้จ่าย", aiAnalyzing: "กำลังวิเคราะห์ด้วย AI...",
     noTips: "ไม่มีคำแนะนำในขณะนี้", refresh: "รีเฟรช",
+    aiTips: "คำแนะนำ AI",
     // Edit
     senderLabel: "ผู้ส่ง", receiverLabel: "ผู้รับ", amountLabel: "จำนวนเงิน (฿)",
     bankLabel: "ธนาคาร", dateLabel: "วันที่ (YYYY-MM-DD)", noteLabel: "หมายเหตุ",
@@ -36,6 +38,11 @@ export const TR = {
     chooseFile: "เลือกไฟล์ CSV", importing: "กำลังวิเคราะห์ข้อมูล...",
     importSuccess: "นำเข้าสำเร็จ!", viewAll: "ดูธุรกรรมทั้งหมด",
     importFail: "นำเข้าไม่สำเร็จ", wrongFile: "กรุณาเลือกไฟล์ .csv จากแอปธนาคาร",
+    importStep1: "เปิดแอปธนาคาร → ไปที่ประวัติธุรกรรม",
+    importStep2: "เลือกช่วงเวลาที่ต้องการ",
+    importStep3: "กดส่งออก / Export → เลือก CSV",
+    importStep4: "กลับมาที่นี่แล้วกดปุ่มด้านล่าง",
+    importedFrom: "จาก", importedItems: "รายการ",
     // Settings
     settingsTitle: "ตั้งค่า", language: "ภาษา", theme: "ธีม",
     themeLight: "สว่าง", themeDark: "มืด", themeAuto: "ออโต้",
@@ -46,6 +53,10 @@ export const TR = {
     signInGoogle: "เข้าสู่ระบบด้วย Google", signInApple: "เข้าสู่ระบบด้วย Apple",
     continueGuest: "ใช้งานโดยไม่ลงทะเบียน",
     appleIosOnly: "Apple Sign In ใช้ได้บน iOS เท่านั้น",
+    googleNotReady: "ยังไม่พร้อม",
+    googleNotReadyMsg: "ฟีเจอร์นี้ต้องตั้งค่า Google OAuth ก่อน\nกรุณาใช้งานโดยไม่ลงทะเบียนไปก่อน",
+    googleFetchFail: "ไม่สามารถดึงข้อมูล Google ได้",
+    appleSignInFail: "Apple Sign In ไม่สำเร็จ",
     // Errors
     error: "ข้อผิดพลาด", loadFailed: "โหลดข้อมูลไม่สำเร็จ",
     saveFailed: "บันทึกไม่สำเร็จ โปรดลองอีกครั้ง",
@@ -68,6 +79,7 @@ export const TR = {
     sender: "Sender", receiver: "Receiver", amount: "Amount",
     bank: "Bank", date: "Date", type: "Type",
     income: "Income", expense: "Expense", unspecified: "Unknown",
+    unknownBank: "Unknown Bank",
     savedHint: "Saved — tap Edit if data is incorrect", editData: "Edit Data",
     needCamera: "Camera access required", needLibrary: "Photo library access required",
     // Loading stages
@@ -80,6 +92,7 @@ export const TR = {
     // Analysis
     analysisTitle: "Spending Analysis", aiAnalyzing: "AI is analyzing...",
     noTips: "No tips available", refresh: "Refresh",
+    aiTips: "AI Tips",
     // Edit
     senderLabel: "Sender", receiverLabel: "Receiver", amountLabel: "Amount (฿)",
     bankLabel: "Bank", dateLabel: "Date (YYYY-MM-DD)", noteLabel: "Note",
@@ -92,6 +105,11 @@ export const TR = {
     chooseFile: "Choose CSV File", importing: "Analyzing data...",
     importSuccess: "Import Successful!", viewAll: "View All Transactions",
     importFail: "Import Failed", wrongFile: "Please select a .csv file from your bank app",
+    importStep1: "Open bank app → go to Transaction History",
+    importStep2: "Select the date range",
+    importStep3: "Tap Export → select CSV",
+    importStep4: "Return here and tap the button below",
+    importedFrom: "from", importedItems: "item(s)",
     // Settings
     settingsTitle: "Settings", language: "Language", theme: "Theme",
     themeLight: "Light", themeDark: "Dark", themeAuto: "Auto",
@@ -102,6 +120,10 @@ export const TR = {
     signInGoogle: "Sign in with Google", signInApple: "Sign in with Apple",
     continueGuest: "Continue without account",
     appleIosOnly: "Apple Sign In is iOS only",
+    googleNotReady: "Not Ready",
+    googleNotReadyMsg: "This feature requires Google OAuth setup.\nPlease continue as guest for now.",
+    googleFetchFail: "Could not fetch Google profile",
+    appleSignInFail: "Apple Sign In failed",
     // Errors
     error: "Error", loadFailed: "Failed to load data",
     saveFailed: "Save failed. Please try again",

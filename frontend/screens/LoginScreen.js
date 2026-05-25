@@ -43,7 +43,7 @@ export default function LoginScreen() {
       const info = await res.json();
       await login({ id: info.id, name: info.name, email: info.email, picture: info.picture, provider: "google" });
     } catch {
-      Alert.alert(t("error"), "ไม่สามารถดึงข้อมูล Google ได้");
+      Alert.alert(t("error"), t("googleFetchFail"));
     } finally {
       setBusy(false);
     }
@@ -61,14 +61,14 @@ export default function LoginScreen() {
       await login({ id: cred.user, name, email: cred.email, picture: null, provider: "apple" });
     } catch (e) {
       if (e.code !== "ERR_REQUEST_CANCELED") {
-        Alert.alert(t("error"), "Apple Sign In ไม่สำเร็จ");
+        Alert.alert(t("error"), t("appleSignInFail"));
       }
     }
   }
 
   async function handleGooglePress() {
     if (!GOOGLE_WEB_CLIENT_ID) {
-      Alert.alert("ยังไม่พร้อม", "ฟีเจอร์นี้ต้องตั้งค่า Google OAuth ก่อน\nกรุณาใช้งานโดยไม่ลงทะเบียนไปก่อน");
+      Alert.alert(t("googleNotReady"), t("googleNotReadyMsg"));
       return;
     }
     promptAsync();
