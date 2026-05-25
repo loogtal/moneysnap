@@ -7,25 +7,31 @@ import httpx
 from backend.services.gemini_limiter import acquire
 
 API_KEY = os.environ.get("GOOGLE_API_KEY", "")
-GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent"
+_GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta/models"
+_DEFAULT_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.0-flash-lite")
+_FALLBACK_MODELS = ["gemini-2.0-flash-lite", "gemini-1.5-flash", "gemini-1.5-flash-8b", "gemini-2.0-flash"]
 
 
-def _post_with_retry(payload: dict, max_retries: int = 2) -> dict:
-    for attempt in range(max_retries):
-        acquire()  # enforce rate limit
-        resp = httpx.post(
-            GEMINI_URL,
-            params={"key": API_KEY},
-            json=payload,
-            timeout=60,
-        )
+def _post_with_retry(payload: dict) -> dict:
+    models = [_DEFAULT_MODEL] + [m for m in _FALLBACK_MODELS if m != _DEFAULT_MODEL]
+    for model in models:
+        url = f"{_GEMINI_BASE}/{model}:generateContent"
+        acquire()
+        resp = httpx.post(url, params={"key": API_KEY}, json=payload, timeout=60)
         if resp.status_code == 429:
-            if attempt < max_retries - 1:
-                time.sleep(30)
+            body = resp.json()
+            if "limit: 0" in body.get("error", {}).get("message", ""):
                 continue
-            raise RuntimeError("rate_limited")
+            time.sleep(30)
+            acquire()
+            resp = httpx.post(url, params={"key": API_KEY}, json=payload, timeout=60)
+            if resp.status_code == 429:
+                continue
+        if resp.status_code in (400, 404):
+            continue
         resp.raise_for_status()
         return resp.json()
+    raise RuntimeError("ไม่พบ Gemini model ที่ใช้งานได้")
 
 
 def get_spending_tips(monthly_data: Dict) -> str:

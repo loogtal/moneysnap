@@ -69,6 +69,26 @@ async def scan_slip(file: UploadFile = File(...), db: Session = Depends(get_db))
     }
 
 
+@router.get("/list-models")
+def list_models():
+    """List Gemini models available for the current API key."""
+    import os, httpx as _httpx
+    api_key = os.environ.get("GOOGLE_API_KEY", "")
+    if not api_key:
+        return {"error": "GOOGLE_API_KEY not set"}
+    try:
+        resp = _httpx.get(
+            "https://generativelanguage.googleapis.com/v1beta/models",
+            params={"key": api_key},
+            timeout=15,
+        )
+        resp.raise_for_status()
+        names = [m["name"] for m in resp.json().get("models", []) if "generateContent" in m.get("supportedGenerationMethods", [])]
+        return {"models": names}
+    except Exception as e:
+        return {"error": str(e)}
+
+
 @router.get("/test-api")
 def test_gemini_api():
     """Test GOOGLE_API_KEY with one real Gemini call to diagnose quota issues."""

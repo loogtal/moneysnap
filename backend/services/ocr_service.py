@@ -22,30 +22,51 @@ MEDIA_TYPES = {
     ".gif": "image/gif",
     ".webp": "image/webp",
 }
-GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent"
+_GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta/models"
+_DEFAULT_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.0-flash-lite")
+GEMINI_URL = f"{_GEMINI_BASE}/{_DEFAULT_MODEL}:generateContent"
+
+# Fallback models tried in order if the primary model has quota=0
+_FALLBACK_MODELS = [
+    "gemini-2.0-flash-lite",
+    "gemini-1.5-flash",
+    "gemini-1.5-flash-8b",
+    "gemini-2.0-flash",
+]
 
 
-def _gemini_post(api_key: str, payload: dict, max_retries: int = 2) -> dict:
-    for attempt in range(max_retries):
-        acquire()  # enforce rate limit before every call
-        resp = httpx.post(
-            GEMINI_URL,
-            params={"key": api_key},
-            json=payload,
-            timeout=60,
-        )
+def _gemini_post(api_key: str, payload: dict) -> dict:
+    """Try primary model first, then fallbacks if quota=0."""
+    models = [_DEFAULT_MODEL] + [m for m in _FALLBACK_MODELS if m != _DEFAULT_MODEL]
+    last_err = None
+    for model in models:
+        url = f"{_GEMINI_BASE}/{model}:generateContent"
+        acquire()
+        resp = httpx.post(url, params={"key": api_key}, json=payload, timeout=60)
         if resp.status_code == 429:
-            if attempt < max_retries - 1:
-                logger.warning("Gemini 429 — waiting 30s before retry")
-                time.sleep(30)
+            body = resp.json()
+            msg = body.get("error", {}).get("message", "")
+            if "limit: 0" in msg:
+                logger.warning("Model %s has quota=0, trying next model", model)
+                last_err = RuntimeError(f"Model {model} ไม่มีสิทธิ์ใช้กับ key นี้")
                 continue
-            raise RuntimeError("Gemini API เกินโควต้า กรุณารอ 1 นาทีแล้วลองใหม่")
-        if resp.status_code == 400:
-            raise RuntimeError(f"Gemini request error ({resp.status_code}): {resp.text[:200]}")
+            logger.warning("Gemini 429 on %s — waiting 30s", model)
+            time.sleep(30)
+            acquire()
+            resp = httpx.post(url, params={"key": api_key}, json=payload, timeout=60)
+            if resp.status_code == 429:
+                last_err = RuntimeError("Gemini API เกินโควต้า กรุณารอ 1 นาทีแล้วลองใหม่")
+                continue
+        if resp.status_code in (400, 404):
+            logger.warning("Model %s not available (%s), trying next", model, resp.status_code)
+            last_err = RuntimeError(f"Model {model} ไม่พร้อมใช้งาน ({resp.status_code})")
+            continue
         if resp.status_code == 403:
-            raise RuntimeError("GOOGLE_API_KEY ไม่มีสิทธิ์ใช้โมเดลนี้ ตรวจสอบใน Railway Variables")
+            raise RuntimeError("GOOGLE_API_KEY ไม่มีสิทธิ์ ตรวจสอบว่าสร้างจาก aistudio.google.com/apikey")
         resp.raise_for_status()
+        logger.info("Using model: %s", model)
         return resp.json()
+    raise last_err or RuntimeError("ไม่พบ Gemini model ที่ใช้งานได้ ตรวจสอบ API key ใน Railway")
 
 
 def parse_date(date_str: str):
