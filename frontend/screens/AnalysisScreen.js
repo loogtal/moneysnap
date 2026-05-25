@@ -39,11 +39,13 @@ export default function AnalysisScreen() {
     }
   }
 
-  function refresh() {
+  async function refresh() {
     setLoadingChart(true);
     setLoadingTips(true);
     setSummary([]);
     setTips("");
+    const month = new Date().toISOString().slice(0, 7);
+    await axios.delete(`${API_BASE_URL}/analysis/ai-tips/${month}`).catch(() => {});
     loadChart();
     loadTips();
   }

@@ -1,7 +1,7 @@
 import sys
+from contextlib import asynccontextmanager
 from pathlib import Path
 
-# Ensure the project root is on PYTHONPATH so imports like `backend.routers` work
 ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
@@ -11,7 +11,15 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from backend.routers import slips, transactions, analysis
 
-app = FastAPI(title="MoneySnap", version="1.0.0")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    from backend.database import init_db
+    init_db()
+    yield
+
+
+app = FastAPI(title="MoneySnap", version="1.0.0", lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -19,11 +27,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-@app.on_event("startup")
-def startup_event():
-    from backend.database import init_db
-    init_db()
 
 app.include_router(slips.router, prefix="/api/slips", tags=["slips"])
 app.include_router(transactions.router, prefix="/api/transactions", tags=["transactions"])

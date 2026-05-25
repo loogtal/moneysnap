@@ -10,6 +10,8 @@ from backend.models import Transaction
 from backend.services.ocr_service import extract_slip_data
 from backend.services.category_service import categorize
 
+MAX_UPLOAD_BYTES = 20 * 1024 * 1024  # 20 MB
+
 router = APIRouter()
 UPLOAD_DIR = Path(__file__).resolve().parent.parent.parent / "uploads"
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
@@ -25,20 +27,27 @@ async def scan_slip(file: UploadFile = File(...), db: Session = Depends(get_db))
     if not suffix or suffix.lower() not in (".jpg", ".jpeg", ".png", ".webp", ".gif"):
         suffix = ".jpg"
     file_path = UPLOAD_DIR / f"{uuid.uuid4()}{suffix}"
+
+    raw = await file.read()
+    if len(raw) > MAX_UPLOAD_BYTES:
+        raise HTTPException(status_code=413, detail="ไฟล์ใหญ่เกินไป (สูงสุด 20 MB)")
     with file_path.open("wb") as buffer:
-        buffer.write(await file.read())
+        buffer.write(raw)
 
     try:
         slip_data = extract_slip_data(str(file_path))
     except RuntimeError as e:
+        file_path.unlink(missing_ok=True)
         msg = str(e)
         status = 429 if ("429" in msg or "โควต้า" in msg or "quota" in msg.lower()) else 503
         raise HTTPException(status_code=status, detail=msg)
     except httpx.HTTPStatusError as e:
+        file_path.unlink(missing_ok=True)
         if e.response.status_code == 429:
             raise HTTPException(status_code=429, detail="Gemini API เกินโควต้า กรุณารอ 1 นาทีแล้วลองใหม่")
         raise HTTPException(status_code=500, detail=f"Gemini API error: {e.response.status_code}")
     except Exception as e:
+        file_path.unlink(missing_ok=True)
         raise HTTPException(status_code=500, detail=f"วิเคราะห์สลิปไม่สำเร็จ: {e}")
 
     category = categorize(slip_data.get("raw_text", ""))

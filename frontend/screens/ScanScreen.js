@@ -23,6 +23,7 @@ export default function ScanScreen({ navigation }) {
 
   useEffect(() => {
     axios.get(`${BASE_URL}/health`, { timeout: 10000 }).catch(() => {});
+    return () => clearInterval(timer.current);
   }, []);
 
   function startTimer() {

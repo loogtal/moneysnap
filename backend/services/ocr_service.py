@@ -142,23 +142,23 @@ def extract_slip_data(image_path: str) -> dict:
     }
 
     try:
-        data = _gemini_post(api_key, payload)
-        raw = data["candidates"][0]["content"]["parts"][0]["text"].strip()
+        resp_data = _gemini_post(api_key, payload)
+        raw = resp_data["candidates"][0]["content"]["parts"][0]["text"].strip()
         logger.info("Gemini response: %s", raw)
         raw = re.sub(r"^```(?:json)?\s*", "", raw)
         raw = re.sub(r"\s*```$", "", raw)
         match = re.search(r"\{.*\}", raw, re.DOTALL)
         if not match:
             raise ValueError(f"ไม่พบ JSON: {raw[:200]}")
-        data = json.loads(match.group())
-        data["transaction_date"] = parse_date(data.get("date_str"))
-        data.setdefault("raw_text", "")
-        data.setdefault("amount", 0.0)
-        data.setdefault("bank_name", "ไม่ระบุ")
-        data.setdefault("sender_name", None)
-        data.setdefault("receiver_name", None)
-        data.setdefault("transaction_type", "expense")
-        return data
+        result = json.loads(match.group())
+        result["transaction_date"] = parse_date(result.get("date_str"))
+        result.setdefault("raw_text", "")
+        result.setdefault("amount", 0.0)
+        result.setdefault("bank_name", "ไม่ระบุ")
+        result.setdefault("sender_name", None)
+        result.setdefault("receiver_name", None)
+        result.setdefault("transaction_type", "expense")
+        return result
     except Exception as e:
         logger.error("extract_slip_data error: %s", e, exc_info=True)
         raise

@@ -43,9 +43,10 @@ def ai_tips(payload: dict, db: Session = Depends(get_db)):
     except Exception:
         tips = ""
 
-    # Cache result (even if empty) so we don't retry Gemini on every request
-    db.merge(TipsCache(month=month, tips=tips))
-    db.commit()
+    # Only cache non-empty tips so a transient failure doesn't permanently block regeneration
+    if tips:
+        db.merge(TipsCache(month=month, tips=tips))
+        db.commit()
 
     return {"month": month, "tips": tips, "summary": monthly_data}
 

@@ -91,7 +91,7 @@ def parse_bank_csv(content: bytes) -> list[dict]:
     col_map = info["col_map"]
     bank = info["bank"]
 
-    if not col_map.get("date") is not None or "date" not in col_map:
+    if "date" not in col_map:
         return []
 
     transactions = []

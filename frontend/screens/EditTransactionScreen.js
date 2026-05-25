@@ -8,6 +8,11 @@ import { API_BASE_URL } from "../config";
 import { useApp } from "../contexts/AppContext";
 
 const CATEGORIES = ["food", "shopping", "transport", "bills", "health", "entertainment", "other"];
+const CAT_KEY = {
+  food: "catFood", shopping: "catShopping", transport: "catTransport",
+  bills: "catBills", health: "catHealth", entertainment: "catEntertainment",
+  other: "catOther",
+};
 const TYPES = ["expense", "income"];
 
 export default function EditTransactionScreen({ route, navigation }) {
@@ -88,7 +93,7 @@ export default function EditTransactionScreen({ route, navigation }) {
       <Text style={s.label}>{t("categoryLabel")}</Text>
       <View style={s.chipRow}>
         {CATEGORIES.map((cat) => (
-          <Chip key={cat} label={cat} active={form.category === cat} onPress={() => set("category")(cat)} colors={colors} />
+          <Chip key={cat} label={t(CAT_KEY[cat])} active={form.category === cat} onPress={() => set("category")(cat)} colors={colors} />
         ))}
       </View>
 

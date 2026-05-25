@@ -26,6 +26,13 @@ export const TR = {
     analysisTitle: "วิเคราะห์การใช้จ่าย", aiAnalyzing: "กำลังวิเคราะห์ด้วย AI...",
     noTips: "ไม่มีคำแนะนำในขณะนี้", refresh: "รีเฟรช",
     aiTips: "คำแนะนำ AI",
+    // Chart
+    noDataMonth: "ไม่มีข้อมูลเดือนนี้", spendingByCategory: "การใช้จ่ายตามหมวด",
+    totalLabel: "รวม",
+    // Categories
+    catFood: "อาหาร", catShopping: "ช้อปปิ้ง", catTransport: "การเดินทาง",
+    catBills: "บิล/ค่าใช้จ่าย", catHealth: "สุขภาพ", catEntertainment: "บันเทิง",
+    catOther: "อื่นๆ",
     // Edit
     senderLabel: "ผู้ส่ง", receiverLabel: "ผู้รับ", amountLabel: "จำนวนเงิน (฿)",
     bankLabel: "ธนาคาร", dateLabel: "วันที่ (YYYY-MM-DD)", noteLabel: "หมายเหตุ",
@@ -93,6 +100,13 @@ export const TR = {
     analysisTitle: "Spending Analysis", aiAnalyzing: "AI is analyzing...",
     noTips: "No tips available", refresh: "Refresh",
     aiTips: "AI Tips",
+    // Chart
+    noDataMonth: "No data this month", spendingByCategory: "Spending by Category",
+    totalLabel: "Total",
+    // Categories
+    catFood: "Food", catShopping: "Shopping", catTransport: "Transport",
+    catBills: "Bills", catHealth: "Health", catEntertainment: "Entertainment",
+    catOther: "Other",
     // Edit
     senderLabel: "Sender", receiverLabel: "Receiver", amountLabel: "Amount (฿)",
     bankLabel: "Bank", dateLabel: "Date (YYYY-MM-DD)", noteLabel: "Note",

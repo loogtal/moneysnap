@@ -3,7 +3,7 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from pydantic import BaseModel
-from sqlalchemy import extract
+from sqlalchemy import extract, nullslast
 from sqlalchemy.orm import Session
 
 from backend.database import get_db
@@ -65,7 +65,7 @@ def list_transactions(
 
     total = query.count()
     items = (
-        query.order_by(Transaction.transaction_date.desc())
+        query.order_by(nullslast(Transaction.transaction_date.desc()))
         .offset((page - 1) * page_size)
         .limit(page_size)
         .all()

@@ -50,7 +50,7 @@ def _create_monthly_summary_view(connection):
 
 
 def init_db() -> None:
-    from backend.models import Transaction
+    from backend.models import Transaction, TipsCache  # noqa: F401 — ensure all tables are registered
     Base.metadata.create_all(bind=engine)
     with engine.connect() as connection:
         _create_monthly_summary_view(connection)

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { useColorScheme } from "react-native";
+import { useColorScheme, View, ActivityIndicator } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { TR } from "../translations";
 
@@ -79,7 +79,13 @@ export function AppProvider({ children }) {
     await AsyncStorage.removeItem("user").catch(() => {});
   }
 
-  if (!ready) return null;
+  if (!ready) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#fff" }}>
+        <ActivityIndicator size="large" color="#2d6cdf" />
+      </View>
+    );
+  }
 
   return (
     <AppContext.Provider value={{ colors, isDark, themeMode, language, user, t, changeTheme, changeLanguage, login, logout }}>
