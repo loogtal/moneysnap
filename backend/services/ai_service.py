@@ -4,7 +4,7 @@ from typing import Dict
 import httpx
 
 API_KEY = os.environ.get("GOOGLE_API_KEY", "")
-GEMINI_URL = "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent"
+GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent"
 
 
 def get_spending_tips(monthly_data: Dict) -> str:

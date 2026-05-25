@@ -17,7 +17,7 @@ MEDIA_TYPES = {
     ".gif": "image/gif",
     ".webp": "image/webp",
 }
-GEMINI_URL = "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent"
+GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent"
 
 
 def parse_date(date_str: str):
