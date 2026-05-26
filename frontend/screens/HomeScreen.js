@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
 import {
   View, Text, ScrollView, TouchableOpacity,
-  ActivityIndicator, StyleSheet, Image,
+  ActivityIndicator, StyleSheet, Image, Alert,
 } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import { API_BASE_URL } from "../config";
 import SpendingChart from "../components/SpendingChart";
@@ -34,24 +35,66 @@ export default function HomeScreen({ navigation }) {
   const [summary, setSummary] = useState([]);
   const [recent, setRecent] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [todayIncome, setTodayIncome] = useState(0);
+  const [todayExpense, setTodayExpense] = useState(0);
 
   useEffect(() => {
     axios.get(`${API_BASE_URL.replace("/api", "")}/health`, { timeout: 10000 }).catch(() => {});
     loadData();
+    checkBudgetAlert();
   }, []);
 
   async function loadData() {
     try {
       const [s, tx] = await Promise.all([
         axios.get(`${API_BASE_URL}/analysis/monthly`),
-        axios.get(`${API_BASE_URL}/transactions`, { params: { page_size: 5 } }),
+        axios.get(`${API_BASE_URL}/transactions`, { params: { page_size: 50 } }),
       ]);
       setSummary(s.data.summary || []);
-      setRecent(tx.data.results || []);
+      const all = tx.data.results || [];
+      setRecent(all.slice(0, 5));
+      const todayStr = new Date().toISOString().slice(0, 10);
+      const todayTxs = all.filter((tx) => tx.transaction_date?.slice(0, 10) === todayStr);
+      setTodayIncome(todayTxs.filter((tx) => tx.transaction_type === "income").reduce((s, tx) => s + (tx.amount || 0), 0));
+      setTodayExpense(todayTxs.filter((tx) => tx.transaction_type !== "income").reduce((s, tx) => s + (tx.amount || 0), 0));
     } catch {
     } finally {
       setLoading(false);
     }
+  }
+
+  async function checkBudgetAlert() {
+    try {
+      const currentMonth = new Date().toISOString().slice(0, 7);
+      const last = await AsyncStorage.getItem("last_budget_month").catch(() => null);
+      if (last === currentMonth) return;
+      await AsyncStorage.setItem("last_budget_month", currentMonth).catch(() => {});
+      if (!last) return;
+
+      const prevDate = new Date();
+      prevDate.setMonth(prevDate.getMonth() - 1);
+      const prevMonth = prevDate.toISOString().slice(0, 7);
+
+      const [analysisRes, budgetsRes] = await Promise.all([
+        axios.get(`${API_BASE_URL}/analysis/monthly`),
+        axios.get(`${API_BASE_URL}/budgets`),
+      ]);
+      const budgets = budgetsRes.data || [];
+      if (budgets.length === 0) return;
+
+      const prevRows = (analysisRes.data.summary || []).filter((r) => r.month === prevMonth && r.transaction_type !== "income");
+      const byCategory = {};
+      prevRows.forEach((r) => { byCategory[r.category] = (byCategory[r.category] || 0) + r.total; });
+
+      const lines = budgets.map((b) => {
+        const spent = byCategory[b.category] || 0;
+        const over = spent > b.amount;
+        return `${b.category}: ฿${spent.toFixed(0)} / ฿${b.amount.toFixed(0)} ${over ? t("budgetAlertOver") : t("budgetAlertOk")}`;
+      });
+      if (lines.length > 0) {
+        Alert.alert(t("budgetAlertTitle"), lines.join("\n"));
+      }
+    } catch {}
   }
 
   const thisMonth = summary.filter((item) => item.month === new Date().toISOString().slice(0, 7));
@@ -82,6 +125,17 @@ export default function HomeScreen({ navigation }) {
           />
         </TouchableOpacity>
       </View>
+
+      {/* Today overview */}
+      {!loading && (todayIncome > 0 || todayExpense > 0) && (
+        <View style={[s.todayCard, { backgroundColor: colors.primary }]}>
+          <Text style={s.todayLabel}>{t("todayOverview")}</Text>
+          <View style={s.todayRow}>
+            {todayIncome > 0 && <Text style={s.todayNum}>+฿{todayIncome.toFixed(0)}</Text>}
+            {todayExpense > 0 && <Text style={[s.todayNum, { opacity: 0.8 }]}>-฿{todayExpense.toFixed(0)}</Text>}
+          </View>
+        </View>
+      )}
 
       {/* Monthly summary card */}
       {!loading && (monthIncome > 0 || monthExpense > 0) && (
@@ -176,4 +230,8 @@ const styles = (c) => StyleSheet.create({
   summaryLabel: { fontSize: 11, color: c.subtext, marginBottom: 4 },
   summaryValue: { fontSize: 16, fontWeight: "800" },
   summaryDivider: { width: 1, backgroundColor: c.border, marginVertical: 4 },
+  todayCard: { borderRadius: 12, padding: 14, marginBottom: 12 },
+  todayLabel: { fontSize: 11, fontWeight: "700", color: "#ffffff99", textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 4 },
+  todayRow: { flexDirection: "row", gap: 16 },
+  todayNum: { fontSize: 20, fontWeight: "800", color: "#fff" },
 });

@@ -1,5 +1,6 @@
+import json
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from pydantic import BaseModel
@@ -24,6 +25,7 @@ class TransactionUpdate(BaseModel):
     category: Optional[str] = None
     note: Optional[str] = None
     transaction_date: Optional[str] = None
+    tags: Optional[List[str]] = None
 
 
 def _serialize(item: Transaction) -> dict:
@@ -37,6 +39,7 @@ def _serialize(item: Transaction) -> dict:
         "transaction_type": item.transaction_type,
         "category": item.category,
         "note": item.note,
+        "tags": json.loads(item.tags) if item.tags else [],
         "created_at": item.created_at.isoformat() if item.created_at else None,
     }
 
@@ -48,6 +51,7 @@ def list_transactions(
     category: Optional[str] = None,
     type: Optional[str] = None,
     search: Optional[str] = None,
+    tag: Optional[str] = None,
     page: int = 1,
     page_size: int = 20,
     current_user: User = Depends(get_current_user),
@@ -72,6 +76,8 @@ def list_transactions(
             Transaction.sender_name.ilike(term) |
             Transaction.note.ilike(term)
         )
+    if tag:
+        query = query.filter(Transaction.tags.like(f'%"{tag}"%'))
 
     total = query.count()
     items = (
@@ -118,6 +124,8 @@ def update_transaction(
             data["transaction_date"] = datetime.fromisoformat(data["transaction_date"])
         except ValueError:
             data["transaction_date"] = None
+    if "tags" in data:
+        data["tags"] = json.dumps(data["tags"])
 
     for field, value in data.items():
         setattr(transaction, field, value)

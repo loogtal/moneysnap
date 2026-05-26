@@ -1,8 +1,9 @@
 import uuid
 from pathlib import Path
+from typing import Optional
 
 import httpx
-from fastapi import APIRouter, Depends, UploadFile, File, HTTPException
+from fastapi import APIRouter, Depends, UploadFile, File, HTTPException, Form
 from sqlalchemy.orm import Session
 
 from backend.database import get_db
@@ -20,6 +21,7 @@ MAX_UPLOAD_BYTES = 20 * 1024 * 1024  # 20 MB
 @router.post("/scan")
 async def scan_slip(
     file: UploadFile = File(...),
+    hint: Optional[str] = Form(default=None),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -38,7 +40,7 @@ async def scan_slip(
         buffer.write(raw)
 
     try:
-        slip_data = extract_slip_data(str(file_path))
+        slip_data = extract_slip_data(str(file_path), hint=hint or None)
     except RuntimeError as e:
         file_path.unlink(missing_ok=True)
         msg = str(e)

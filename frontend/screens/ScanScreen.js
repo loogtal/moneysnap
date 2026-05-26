@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import {
   View, Text, TouchableOpacity, ActivityIndicator,
-  StyleSheet, Image, Alert, ScrollView,
+  StyleSheet, Image, Alert, ScrollView, TextInput,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import axios from "axios";
@@ -18,6 +18,9 @@ export default function ScanScreen({ navigation }) {
   const [loading, setLoading] = useState(false);
   const [stage, setStage] = useState(0);
   const [result, setResult] = useState(null);
+  const [showHint, setShowHint] = useState(false);
+  const [hint, setHint] = useState("");
+  const lastUri = useRef(null);
   const timer = useRef(null);
 
   const STAGES = [t("stage0"), t("stage1"), t("stage2"), t("stage3")];
@@ -56,14 +59,18 @@ export default function ScanScreen({ navigation }) {
     upload(res.assets[0].uri);
   }
 
-  async function upload(uri) {
+  async function upload(uri, hintText = null) {
     setImage(uri);
     setResult(null);
     setLoading(true);
+    setShowHint(false);
+    setHint("");
+    lastUri.current = uri;
     startTimer();
     try {
       const form = new FormData();
       form.append("file", { uri, name: uri.split("/").pop(), type: "image/jpeg" });
+      if (hintText) form.append("hint", hintText);
       const res = await axios.post(`${API_BASE_URL}/slips/scan`, form, {
         headers: { "Content-Type": "multipart/form-data" },
         timeout: 120000,
@@ -134,6 +141,29 @@ export default function ScanScreen({ navigation }) {
           <TouchableOpacity style={s.editBtn} onPress={() => { navigation.navigate("EditTransaction", { transactionId: result.id }); setResult(null); setImage(null); }}>
             <Text style={s.editBtnText}>{t("editData")}</Text>
           </TouchableOpacity>
+
+          <TouchableOpacity style={s.retryToggle} onPress={() => setShowHint((v) => !v)}>
+            <Text style={[s.retryToggleText, { color: colors.subtext }]}>⚠️  {t("retryHint")}</Text>
+          </TouchableOpacity>
+          {showHint && (
+            <View style={s.hintBox}>
+              <TextInput
+                style={[s.hintInput, { backgroundColor: colors.inputBg, borderColor: colors.inputBorder, color: colors.text }]}
+                value={hint}
+                onChangeText={setHint}
+                placeholder={t("retryHintPlaceholder")}
+                placeholderTextColor={colors.subtext}
+                multiline
+              />
+              <TouchableOpacity
+                style={[s.retryBtn, { backgroundColor: colors.primary }]}
+                onPress={() => upload(lastUri.current, hint)}
+                disabled={!hint.trim()}
+              >
+                <Text style={{ color: "#fff", fontWeight: "700" }}>🔄  {t("retryBtn")}</Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
       )}
     </ScrollView>
@@ -166,4 +196,9 @@ const styles = (c) => StyleSheet.create({
   hint: { marginTop: 14, color: c.subtext, fontSize: 12, textAlign: "center" },
   editBtn: { marginTop: 12, backgroundColor: c.chip, borderRadius: 8, paddingVertical: 10, alignItems: "center" },
   editBtnText: { color: c.primary, fontWeight: "700" },
+  retryToggle: { marginTop: 12, alignItems: "center" },
+  retryToggleText: { fontSize: 12 },
+  hintBox: { marginTop: 10, gap: 8 },
+  hintInput: { borderWidth: 1, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, fontSize: 14, minHeight: 60, textAlignVertical: "top" },
+  retryBtn: { borderRadius: 8, paddingVertical: 10, alignItems: "center" },
 });

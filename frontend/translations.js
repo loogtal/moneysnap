@@ -193,6 +193,18 @@ export const TR = {
     achieveFirstDebt: "บันทึกหนี้แรก", achieveShared: "แชร์สรุป",
     achieveDarkMode: "เปิด Dark Mode", achieveBilingual: "เปลี่ยนภาษา",
     achieveSave10k: "ออมเงิน ฿10,000", achieveImport: "นำเข้า Statement",
+    // Tags
+    tagsLabel: "แท็ก", addTag: "เพิ่มแท็ก", tagHint: "เช่น vacation, work",
+    noTags: "ยังไม่มีแท็ก", filterByTag: "กรองตามแท็ก",
+    // OCR Retry
+    retryHint: "ผลไม่ถูกต้อง? เพิ่มคำแนะนำแล้วลองใหม่",
+    retryHintPlaceholder: "เช่น นี่คือรายรับ, จำนวนเงินคือ 500",
+    retryBtn: "ลองใหม่พร้อมคำแนะนำ",
+    // Budget Month Alert
+    budgetAlertTitle: "สรุปงบประมาณเดือนที่แล้ว",
+    budgetAlertOver: "เกินงบ ❌", budgetAlertOk: "ผ่านงบ ✅",
+    budgetAlertNoBudget: "ไม่ได้ตั้งงบประมาณไว้",
+    todayOverview: "วันนี้",
     // PIN Lock
     pinLock: "PIN Lock", pinEnable: "เปิดใช้งาน PIN", pinDisable: "ปิดใช้งาน PIN",
     pinEnabled: "PIN ถูกเปิดใช้งานแล้ว",
@@ -414,6 +426,18 @@ export const TR = {
     achieveFirstDebt: "First Debt", achieveShared: "Shared Summary",
     achieveDarkMode: "Dark Mode On", achieveBilingual: "Changed Language",
     achieveSave10k: "Saved ฿10,000", achieveImport: "Imported Statement",
+    // Tags
+    tagsLabel: "Tags", addTag: "Add Tag", tagHint: "e.g. vacation, work",
+    noTags: "No tags yet", filterByTag: "Filter by tag",
+    // OCR Retry
+    retryHint: "Result wrong? Add a hint and retry",
+    retryHintPlaceholder: "e.g. This is income, amount is 500",
+    retryBtn: "Retry with Hint",
+    // Budget Month Alert
+    budgetAlertTitle: "Last Month Budget Summary",
+    budgetAlertOver: "Over budget ❌", budgetAlertOk: "Within budget ✅",
+    budgetAlertNoBudget: "No budget set",
+    todayOverview: "Today",
     // PIN Lock
     pinLock: "PIN Lock", pinEnable: "Enable PIN", pinDisable: "Disable PIN",
     pinEnabled: "PIN lock is enabled",

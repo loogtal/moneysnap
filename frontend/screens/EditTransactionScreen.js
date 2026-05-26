@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import {
   View, Text, TextInput, ScrollView, StyleSheet,
-  TouchableOpacity, ActivityIndicator, Alert,
+  TouchableOpacity, ActivityIndicator, Alert, KeyboardAvoidingView, Platform,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
@@ -27,6 +27,8 @@ export default function EditTransactionScreen({ route, navigation }) {
     sender_name: "", receiver_name: "", amount: "", bank_name: "",
     transaction_type: "expense", category: "other", note: "", transaction_date: "",
   });
+  const [tags, setTags] = useState([]);
+  const [tagInput, setTagInput] = useState("");
 
   useEffect(() => {
     loadTx();
@@ -49,6 +51,7 @@ export default function EditTransactionScreen({ route, navigation }) {
         note: tx.note || "",
         transaction_date: tx.transaction_date ? tx.transaction_date.slice(0, 10) : "",
       });
+      setTags(tx.tags || []);
     } catch {
       Alert.alert(t("error"), t("loadFailed"));
       navigation.goBack();
@@ -65,7 +68,7 @@ export default function EditTransactionScreen({ route, navigation }) {
     }
     setSaving(true);
     try {
-      await axios.patch(`${API_BASE_URL}/transactions/${transactionId}`, { ...form, amount });
+      await axios.patch(`${API_BASE_URL}/transactions/${transactionId}`, { ...form, amount, tags });
       navigation.goBack();
     } catch {
       Alert.alert(t("error"), t("saveFailed"));
@@ -107,6 +110,47 @@ export default function EditTransactionScreen({ route, navigation }) {
           <Chip key={cat.id} label={`${cat.emoji} ${cat.name}`} active={form.category === cat.name} onPress={() => set("category")(cat.name)} colors={colors} />
         ))}
       </View>
+
+      <Text style={s.label}>{t("tagsLabel")}</Text>
+      <View style={{ flexDirection: "row", gap: 8, alignItems: "center", marginBottom: 8 }}>
+        <TextInput
+          style={[s.tagInput, { backgroundColor: colors.inputBg, borderColor: colors.inputBorder, color: colors.text, flex: 1 }]}
+          value={tagInput}
+          onChangeText={setTagInput}
+          placeholder={t("tagHint")}
+          placeholderTextColor={colors.subtext}
+          onSubmitEditing={() => {
+            const v = tagInput.trim().replace(/^#/, "");
+            if (v && !tags.includes(v)) setTags((p) => [...p, v]);
+            setTagInput("");
+          }}
+          returnKeyType="done"
+        />
+        <TouchableOpacity
+          style={{ backgroundColor: colors.primary, borderRadius: 8, paddingHorizontal: 14, paddingVertical: 8 }}
+          onPress={() => {
+            const v = tagInput.trim().replace(/^#/, "");
+            if (v && !tags.includes(v)) setTags((p) => [...p, v]);
+            setTagInput("");
+          }}
+        >
+          <Text style={{ color: "#fff", fontWeight: "700" }}>+</Text>
+        </TouchableOpacity>
+      </View>
+      {tags.length > 0 && (
+        <View style={s.chipRow}>
+          {tags.map((tag) => (
+            <TouchableOpacity
+              key={tag}
+              style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 14, backgroundColor: colors.primary + "22", borderWidth: 1, borderColor: colors.primary, flexDirection: "row", alignItems: "center", gap: 4 }}
+              onPress={() => setTags((p) => p.filter((t) => t !== tag))}
+            >
+              <Text style={{ fontSize: 12, color: colors.primary, fontWeight: "600" }}>#{tag}</Text>
+              <Text style={{ fontSize: 12, color: colors.primary }}>✕</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
 
       <TouchableOpacity style={[s.saveBtn, { backgroundColor: colors.primary }]} onPress={save} disabled={saving}>
         {saving ? <ActivityIndicator color="#fff" /> : <Text style={s.saveBtnText}>{t("save")}</Text>}
@@ -163,4 +207,5 @@ const styles = (c) => StyleSheet.create({
   chipRow: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 16 },
   saveBtn: { borderRadius: 10, paddingVertical: 14, alignItems: "center", marginTop: 12 },
   saveBtnText: { color: "#fff", fontSize: 16, fontWeight: "700" },
+  tagInput: { borderWidth: 1, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8, fontSize: 14 },
 });

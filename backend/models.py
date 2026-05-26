@@ -1,5 +1,6 @@
 from sqlalchemy import Column, Integer, String, Float, DateTime, Text, ForeignKey
 from sqlalchemy.sql import func
+import json
 
 from backend.database import Base
 
@@ -49,4 +50,5 @@ class Transaction(Base):
     transaction_type = Column(String, nullable=True)
     category = Column(String, nullable=True)
     note = Column(Text, nullable=True)
+    tags = Column(Text, nullable=True, default="[]")
     created_at = Column(DateTime(timezone=True), server_default=func.now())

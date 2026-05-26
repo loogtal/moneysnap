@@ -93,7 +93,7 @@ def parse_date(date_str: str):
     return None
 
 
-def extract_slip_data(image_path: str) -> dict:
+def extract_slip_data(image_path: str, hint: str = None) -> dict:
     api_key = os.environ.get("GOOGLE_API_KEY", "")
     if not api_key:
         raise RuntimeError("ไม่พบ GOOGLE_API_KEY — กรุณาตั้งค่าใน Railway environment variables")
@@ -117,10 +117,11 @@ def extract_slip_data(image_path: str) -> dict:
         with open(image_path, "rb") as f:
             image_b64 = base64.b64encode(f.read()).decode()
 
-    prompt = """อ่านสลิปธนาคารไทยในภาพนี้แล้วสกัดข้อมูลให้ครบถ้วน
+    hint_section = f"\n\nหมายเหตุจากผู้ใช้: {hint}" if hint else ""
+    prompt = f"""อ่านสลิปธนาคารไทยในภาพนี้แล้วสกัดข้อมูลให้ครบถ้วน
 
 ตอบในรูปแบบ JSON นี้เท่านั้น ห้ามมีข้อความอื่นนอก JSON:
-{
+{{
   "sender_name": "ชื่อผู้โอน/ผู้ส่ง (null ถ้าไม่มี)",
   "receiver_name": "ชื่อผู้รับเงิน (null ถ้าไม่มี)",
   "amount": 0.0,
@@ -128,9 +129,9 @@ def extract_slip_data(image_path: str) -> dict:
   "date_str": "วันที่ DD/MM/YYYY (null ถ้าไม่มี)",
   "transaction_type": "income หรือ expense",
   "raw_text": "ข้อความทั้งหมดที่อ่านได้จากสลิป"
-}
+}}
 
-กฎ: amount=เงินโอนไม่ใช่ยอดคงเหลือ, date_str=DD/MM/YYYY (ลบ543ถ้าพ.ศ.), transaction_type=income/expense"""
+กฎ: amount=เงินโอนไม่ใช่ยอดคงเหลือ, date_str=DD/MM/YYYY (ลบ543ถ้าพ.ศ.), transaction_type=income/expense{hint_section}"""
 
     payload = {
         "contents": [{

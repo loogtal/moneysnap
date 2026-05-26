@@ -19,6 +19,15 @@ export default function SlipCard({ transaction }) {
         <Text style={[styles.date, { color: colors.subtext }]}>{transaction.transaction_date?.slice(0, 10) || t("noDate")}</Text>
         <CategoryBadge category={transaction.category || "other"} />
       </View>
+      {transaction.tags && transaction.tags.length > 0 && (
+        <View style={styles.tagRow}>
+          {transaction.tags.map((tag) => (
+            <View key={tag} style={[styles.tag, { backgroundColor: colors.primary + "18", borderColor: colors.primary + "55" }]}>
+              <Text style={{ fontSize: 10, color: colors.primary, fontWeight: "600" }}>#{tag}</Text>
+            </View>
+          ))}
+        </View>
+      )}
     </View>
   );
 }
@@ -31,4 +40,6 @@ const styles = StyleSheet.create({
   subtitle: {},
   meta: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 8 },
   date: {},
+  tagRow: { flexDirection: "row", flexWrap: "wrap", gap: 4, marginTop: 6 },
+  tag: { paddingHorizontal: 7, paddingVertical: 2, borderRadius: 10, borderWidth: 1 },
 });

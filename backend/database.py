@@ -27,6 +27,13 @@ def _run_migrations(connection):
     except Exception:
         connection.rollback()
 
+    # Add tags column for transaction labels
+    try:
+        connection.execute(text("ALTER TABLE transactions ADD COLUMN tags TEXT DEFAULT '[]'"))
+        connection.commit()
+    except Exception:
+        connection.rollback()
+
     # Recreate monthly_summary view (idempotent via CREATE OR REPLACE / IF NOT EXISTS)
     if _is_sqlite:
         connection.execute(text("DROP VIEW IF EXISTS monthly_summary"))

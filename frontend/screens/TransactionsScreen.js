@@ -20,6 +20,7 @@ export default function TransactionsScreen({ navigation }) {
   const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState("");
   const [filterMonth, setFilterMonth] = useState(null);
+  const [filterTag, setFilterTag] = useState(null);
   const searchTimer = useRef(null);
 
   const now = new Date();
@@ -28,7 +29,7 @@ export default function TransactionsScreen({ navigation }) {
 
   useFocusEffect(useCallback(() => { load(); }, []));
 
-  async function load(q = search, m = filterMonth) {
+  async function load(q = search, m = filterMonth, tg = filterTag) {
     try {
       const params = { page: 1, page_size: 100 };
       if (q) params.search = q;
@@ -36,6 +37,7 @@ export default function TransactionsScreen({ navigation }) {
         params.year = currentYear;
         params.month = parseInt(m);
       }
+      if (tg) params.tag = tg;
       const res = await axios.get(`${API_BASE_URL}/transactions`, { params });
       setTransactions(res.data.results || []);
     } catch {
@@ -49,13 +51,19 @@ export default function TransactionsScreen({ navigation }) {
   function onSearchChange(text) {
     setSearch(text);
     clearTimeout(searchTimer.current);
-    searchTimer.current = setTimeout(() => load(text, filterMonth), 400);
+    searchTimer.current = setTimeout(() => load(text, filterMonth, filterTag), 400);
   }
 
   function onMonthSelect(m) {
     const next = filterMonth === m ? null : m;
     setFilterMonth(next);
-    load(search, next);
+    load(search, next, filterTag);
+  }
+
+  function onTagSelect(tag) {
+    const next = filterTag === tag ? null : tag;
+    setFilterTag(next);
+    load(search, filterMonth, next);
   }
 
   async function deleteItem(item) {
@@ -124,6 +132,28 @@ export default function TransactionsScreen({ navigation }) {
         })}
       </ScrollView>
 
+      {/* Tag filter */}
+      {(() => {
+        const allTags = [...new Set(transactions.flatMap((tx) => tx.tags || []))];
+        if (allTags.length === 0) return null;
+        return (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={s.monthScroll} contentContainerStyle={s.monthRow}>
+            {allTags.map((tag) => {
+              const active = filterTag === tag;
+              return (
+                <TouchableOpacity
+                  key={tag}
+                  style={[s.monthChip, active && { backgroundColor: colors.primary + "22", borderColor: colors.primary }]}
+                  onPress={() => onTagSelect(tag)}
+                >
+                  <Text style={[s.monthChipText, active && { color: colors.primary }]}>#{tag}</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        );
+      })()}
+
       {transactions.length === 0 ? (
         <Text style={s.empty}>{search || filterMonth ? t("noSearchResult") : t("noData")}</Text>
       ) : (
@@ -145,6 +175,15 @@ export default function TransactionsScreen({ navigation }) {
                   <Text style={s.date}>{item.transaction_date?.slice(0, 10) || t("noDate")}</Text>
                   <CategoryBadge category={item.category || "other"} />
                 </View>
+                {item.tags && item.tags.length > 0 && (
+                  <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 4, marginTop: 4 }}>
+                    {item.tags.map((tag) => (
+                      <View key={tag} style={{ paddingHorizontal: 7, paddingVertical: 2, borderRadius: 10, backgroundColor: colors.primary + "18", borderWidth: 1, borderColor: colors.primary + "55" }}>
+                        <Text style={{ fontSize: 10, color: colors.primary, fontWeight: "600" }}>#{tag}</Text>
+                      </View>
+                    ))}
+                  </View>
+                )}
                 <TouchableOpacity style={s.editRow} onPress={() => navigation.navigate("EditTransaction", { transactionId: item.id })}>
                   <Text style={s.editText}>{t("edit")}</Text>
                 </TouchableOpacity>
