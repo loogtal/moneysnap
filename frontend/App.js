@@ -16,6 +16,8 @@ import EditTransactionScreen from "./screens/EditTransactionScreen";
 import ImportScreen from "./screens/ImportScreen";
 import SettingsScreen from "./screens/SettingsScreen";
 import BudgetScreen from "./screens/BudgetScreen";
+import GoalsScreen from "./screens/GoalsScreen";
+import CustomCategoriesScreen from "./screens/CustomCategoriesScreen";
 
 axios.defaults.timeout = 30000;
 
@@ -135,6 +137,8 @@ function AppNavigator() {
         <Stack.Screen name="Budget" component={BudgetScreen} options={({ navigation }) => ({ title: t("budget"), headerRight: () => settingsButton(navigation) })} />
         <Stack.Screen name="EditTransaction" component={EditTransactionScreen} options={({ navigation }) => ({ title: t("editData"), headerRight: () => settingsButton(navigation) })} />
         <Stack.Screen name="Import" component={ImportScreen} options={({ navigation }) => ({ title: t("importCSV"), headerRight: () => settingsButton(navigation) })} />
+        <Stack.Screen name="Goals" component={GoalsScreen} options={({ navigation }) => ({ title: t("goalsTitle"), headerRight: () => settingsButton(navigation) })} />
+        <Stack.Screen name="CustomCategories" component={CustomCategoriesScreen} options={({ navigation }) => ({ title: t("customCatsTitle"), headerRight: () => settingsButton(navigation) })} />
         <Stack.Screen name="Settings" component={SettingsScreen} options={{ title: t("settings"), headerRight: () => null }} />
       </Stack.Navigator>
     </NavigationContainer>

@@ -44,7 +44,7 @@ function Divider({ colors }) {
   return <View style={{ width: 1, height: "60%", backgroundColor: colors.border }} />;
 }
 
-export default function SettingsScreen() {
+export default function SettingsScreen({ navigation }) {
   const { colors, themeMode, language, user, t, changeTheme, changeLanguage, logout, notificationsEnabled, setNotificationsEnabled, biometricEnabled, setBiometricEnabled } = useApp();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -209,6 +209,17 @@ export default function SettingsScreen() {
           </View>
         </Section>
       )}
+
+      {/* Custom Categories */}
+      <Section label={t("customCats")} colors={colors}>
+        <TouchableOpacity
+          style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}
+          onPress={() => navigation.navigate("CustomCategories")}
+        >
+          <Text style={{ fontSize: 14, color: colors.text }}>{t("customCatsSubtitle")}</Text>
+          <Text style={{ color: colors.subtext, fontSize: 16, marginLeft: 8 }}>›</Text>
+        </TouchableOpacity>
+      </Section>
 
       {/* Theme */}
       <Section label={t("theme")} colors={colors}>

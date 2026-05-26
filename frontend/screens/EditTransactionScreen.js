@@ -3,9 +3,11 @@ import {
   View, Text, TextInput, ScrollView, StyleSheet,
   TouchableOpacity, ActivityIndicator, Alert,
 } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import { API_BASE_URL } from "../config";
 import { useApp } from "../contexts/AppContext";
+import { CUSTOM_CATS_KEY } from "./CustomCategoriesScreen";
 
 const CATEGORIES = ["food", "shopping", "transport", "bills", "health", "entertainment", "other"];
 const CAT_KEY = {
@@ -20,12 +22,18 @@ export default function EditTransactionScreen({ route, navigation }) {
   const { transactionId } = route.params;
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [customCats, setCustomCats] = useState([]);
   const [form, setForm] = useState({
     sender_name: "", receiver_name: "", amount: "", bank_name: "",
     transaction_type: "expense", category: "other", note: "", transaction_date: "",
   });
 
-  useEffect(() => { loadTx(); }, []);
+  useEffect(() => {
+    loadTx();
+    AsyncStorage.getItem(CUSTOM_CATS_KEY).then((raw) => {
+      if (raw) setCustomCats(JSON.parse(raw));
+    }).catch(() => {});
+  }, []);
 
   async function loadTx() {
     try {
@@ -94,6 +102,9 @@ export default function EditTransactionScreen({ route, navigation }) {
       <View style={s.chipRow}>
         {CATEGORIES.map((cat) => (
           <Chip key={cat} label={t(CAT_KEY[cat])} active={form.category === cat} onPress={() => set("category")(cat)} colors={colors} />
+        ))}
+        {customCats.map((cat) => (
+          <Chip key={cat.id} label={`${cat.emoji} ${cat.name}`} active={form.category === cat.name} onPress={() => set("category")(cat.name)} colors={colors} />
         ))}
       </View>
 

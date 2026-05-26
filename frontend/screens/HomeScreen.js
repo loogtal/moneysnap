@@ -112,6 +112,7 @@ export default function HomeScreen({ navigation }) {
           { label: t("analysis"), icon: "📊", screen: "Analysis" },
           { label: t("budget"), icon: "💰", screen: "Budget" },
           { label: t("importCSV"), icon: "📥", screen: "Import" },
+          { label: t("goals"), icon: "🎯", screen: "Goals" },
         ].map(({ label, icon, screen }) => (
           <TouchableOpacity
             key={screen}

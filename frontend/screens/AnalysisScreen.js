@@ -9,6 +9,7 @@ import AiTipCard from "../components/AiTipCard";
 import SpendingChart from "../components/SpendingChart";
 import { useApp } from "../contexts/AppContext";
 import { exportMonthlyReport } from "../services/pdfExport";
+import { exportTransactionsCSV } from "../services/csvExport";
 
 export default function AnalysisScreen({ navigation }) {
   const { colors, t, language, user } = useApp();
@@ -17,10 +18,14 @@ export default function AnalysisScreen({ navigation }) {
   const [loadingChart, setLoadingChart] = useState(true);
   const [loadingTips, setLoadingTips] = useState(true);
   const [exportingPDF, setExportingPDF] = useState(false);
+  const [exportingCSV, setExportingCSV] = useState(false);
+  const [weeklyData, setWeeklyData] = useState(null);
+  const [loadingWeekly, setLoadingWeekly] = useState(true);
 
   useEffect(() => {
     loadChart();
     loadTips();
+    loadWeekly();
   }, []);
 
   async function loadChart() {
@@ -41,6 +46,57 @@ export default function AnalysisScreen({ navigation }) {
     } catch {
     } finally {
       setLoadingTips(false);
+    }
+  }
+
+  async function loadWeekly() {
+    try {
+      const res = await axios.get(`${API_BASE_URL}/transactions`, { params: { page: 1, page_size: 500 } });
+      const all = res.data.results || [];
+      const now = new Date();
+      const today = now.toISOString().slice(0, 10);
+
+      function daysAgo(n) {
+        const d = new Date(now);
+        d.setDate(d.getDate() - n);
+        return d.toISOString().slice(0, 10);
+      }
+
+      const thisWeekStart = daysAgo(6);
+      const lastWeekStart = daysAgo(13);
+      const lastWeekEnd = daysAgo(7);
+
+      function sumWeek(txs, from, to) {
+        const rows = txs.filter((tx) => {
+          const d = tx.transaction_date?.slice(0, 10) ?? "";
+          return d >= from && d <= to;
+        });
+        const income = rows.filter((r) => r.transaction_type === "income").reduce((s, r) => s + (r.amount ?? 0), 0);
+        const expense = rows.filter((r) => r.transaction_type !== "income").reduce((s, r) => s + (r.amount ?? 0), 0);
+        return { income, expense, net: income - expense };
+      }
+
+      setWeeklyData({
+        current: sumWeek(all, thisWeekStart, today),
+        prev: sumWeek(all, lastWeekStart, lastWeekEnd),
+      });
+    } catch {
+    } finally {
+      setLoadingWeekly(false);
+    }
+  }
+
+  async function handleExportCSV() {
+    setExportingCSV(true);
+    try {
+      const month = new Date().toISOString().slice(0, 7);
+      const res = await axios.get(`${API_BASE_URL}/transactions`, { params: { page: 1, page_size: 500 } });
+      const monthTx = (res.data.results || []).filter((tx) => tx.transaction_date?.startsWith(month));
+      await exportTransactionsCSV({ transactions: monthTx, month, language });
+    } catch {
+      Alert.alert(t("error"), t("exportFail"));
+    } finally {
+      setExportingCSV(false);
     }
   }
 
@@ -123,6 +179,34 @@ export default function AnalysisScreen({ navigation }) {
         </>
       )}
 
+      {/* Weekly Summary */}
+      <Text style={s.sectionTitle}>{t("weeklyTitle")}</Text>
+      {loadingWeekly ? (
+        <View style={[s.trendCard, { justifyContent: "center", alignItems: "center" }]}>
+          <ActivityIndicator size="small" color={colors.primary} />
+        </View>
+      ) : weeklyData ? (
+        <View style={s.weeklyCard}>
+          <View style={s.weeklyCol}>
+            <Text style={s.weeklyHeader}>{t("currentWeek")}</Text>
+            <Text style={[s.weeklyVal, { color: colors.success }]}>+฿{weeklyData.current.income.toFixed(0)}</Text>
+            <Text style={[s.weeklyVal, { color: colors.danger }]}>-฿{weeklyData.current.expense.toFixed(0)}</Text>
+            <Text style={[s.weeklyNet, { color: weeklyData.current.net >= 0 ? colors.success : colors.danger }]}>
+              {weeklyData.current.net >= 0 ? "+" : ""}฿{weeklyData.current.net.toFixed(0)}
+            </Text>
+          </View>
+          <View style={s.weeklyDivider} />
+          <View style={s.weeklyCol}>
+            <Text style={s.weeklyHeader}>{t("prevWeek")}</Text>
+            <Text style={[s.weeklyVal, { color: colors.success }]}>+฿{weeklyData.prev.income.toFixed(0)}</Text>
+            <Text style={[s.weeklyVal, { color: colors.danger }]}>-฿{weeklyData.prev.expense.toFixed(0)}</Text>
+            <Text style={[s.weeklyNet, { color: weeklyData.prev.net >= 0 ? colors.success : colors.danger }]}>
+              {weeklyData.prev.net >= 0 ? "+" : ""}฿{weeklyData.prev.net.toFixed(0)}
+            </Text>
+          </View>
+        </View>
+      ) : null}
+
       {loadingTips ? (
         <View style={s.tipsRow}>
           <ActivityIndicator size="small" color={colors.primary} />
@@ -138,6 +222,15 @@ export default function AnalysisScreen({ navigation }) {
         </TouchableOpacity>
         <TouchableOpacity style={s.budgetBtn} onPress={() => navigation.navigate("Budget")}>
           <Text style={s.budgetBtnText}>💰 {t("budget")}</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[s.exportBtn, exportingCSV && { opacity: 0.6 }]}
+          onPress={handleExportCSV}
+          disabled={exportingCSV}
+        >
+          {exportingCSV
+            ? <ActivityIndicator size="small" color={colors.primary} />
+            : <Text style={s.exportText}>📊</Text>}
         </TouchableOpacity>
         <TouchableOpacity
           style={[s.exportBtn, exportingPDF && { opacity: 0.6 }]}
@@ -180,4 +273,13 @@ const styles = (c) => StyleSheet.create({
   budgetBtnText: { color: "#fff", fontWeight: "600", fontSize: 13 },
   exportBtn: { paddingVertical: 10, paddingHorizontal: 14, borderRadius: 8, backgroundColor: c.surface, borderWidth: 1, borderColor: c.border, alignItems: "center", justifyContent: "center" },
   exportText: { fontSize: 16 },
+  weeklyCard: {
+    flexDirection: "row", backgroundColor: c.surface, borderRadius: 12,
+    borderWidth: 1, borderColor: c.border, padding: 14, marginBottom: 4,
+  },
+  weeklyCol: { flex: 1, alignItems: "center", gap: 4 },
+  weeklyDivider: { width: 1, backgroundColor: c.border, marginVertical: 4 },
+  weeklyHeader: { fontSize: 12, fontWeight: "700", color: c.subtext, marginBottom: 4 },
+  weeklyVal: { fontSize: 13, fontWeight: "600" },
+  weeklyNet: { fontSize: 15, fontWeight: "800", marginTop: 4 },
 });
