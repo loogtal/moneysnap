@@ -61,7 +61,7 @@ def _run_migrations(connection):
 
 
 def init_db() -> None:
-    from backend.models import User, Transaction, TipsCache  # noqa: F401
+    from backend.models import User, Transaction, TipsCache, Budget  # noqa: F401
     Base.metadata.create_all(bind=engine)
     with engine.connect() as connection:
         _run_migrations(connection)

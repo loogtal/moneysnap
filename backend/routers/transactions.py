@@ -47,6 +47,7 @@ def list_transactions(
     year: Optional[int] = None,
     category: Optional[str] = None,
     type: Optional[str] = None,
+    search: Optional[str] = None,
     page: int = 1,
     page_size: int = 20,
     current_user: User = Depends(get_current_user),
@@ -64,6 +65,13 @@ def list_transactions(
         query = query.filter(Transaction.category == category)
     if type:
         query = query.filter(Transaction.transaction_type == type)
+    if search:
+        term = f"%{search}%"
+        query = query.filter(
+            Transaction.receiver_name.ilike(term) |
+            Transaction.sender_name.ilike(term) |
+            Transaction.note.ilike(term)
+        )
 
     total = query.count()
     items = (

@@ -30,10 +30,12 @@ function makeGuestId() {
 const AppContext = createContext({
   colors: LIGHT, isDark: false, themeMode: "auto",
   language: "th", user: null, notificationsEnabled: false,
+  biometricEnabled: false,
   t: (k) => k,
   changeTheme: () => {}, changeLanguage: () => {},
   login: async () => {}, logout: async () => {},
   setNotificationsEnabled: async () => {},
+  setBiometricEnabled: async () => {},
 });
 
 export function AppProvider({ children }) {
@@ -42,6 +44,7 @@ export function AppProvider({ children }) {
   const [language, setLanguage] = useState("th");
   const [user, setUser] = useState(null);
   const [notificationsEnabled, setNotifEnabled] = useState(false);
+  const [biometricEnabled, setBiometricEnabledState] = useState(false);
   const [ready, setReady] = useState(false);
   const interceptorRef = useRef(null);
 
@@ -49,12 +52,13 @@ export function AppProvider({ children }) {
   useEffect(() => {
     (async () => {
       try {
-        const [tm, lang, u, token, notif] = await Promise.all([
+        const [tm, lang, u, token, notif, biometric] = await Promise.all([
           AsyncStorage.getItem("themeMode"),
           AsyncStorage.getItem("language"),
           AsyncStorage.getItem("user"),
           AsyncStorage.getItem("authToken"),
           AsyncStorage.getItem("notificationsEnabled"),
+          AsyncStorage.getItem("biometricEnabled"),
         ]);
         if (tm) setThemeMode(tm);
         if (lang) setLanguage(lang);
@@ -63,6 +67,7 @@ export function AppProvider({ children }) {
           axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
         }
         if (notif === "true") setNotifEnabled(true);
+        if (biometric === "true") setBiometricEnabledState(true);
       } catch {}
       setReady(true);
     })();
@@ -159,6 +164,11 @@ export function AppProvider({ children }) {
     await AsyncStorage.setItem("notificationsEnabled", String(enabled)).catch(() => {});
   }
 
+  async function setBiometricEnabled(enabled) {
+    setBiometricEnabledState(enabled);
+    await AsyncStorage.setItem("biometricEnabled", String(enabled)).catch(() => {});
+  }
+
   async function logout() {
     await _clearSession();
   }
@@ -173,8 +183,8 @@ export function AppProvider({ children }) {
 
   return (
     <AppContext.Provider value={{
-      colors, isDark, themeMode, language, user, notificationsEnabled, t,
-      changeTheme, changeLanguage, login, logout, setNotificationsEnabled,
+      colors, isDark, themeMode, language, user, notificationsEnabled, biometricEnabled, t,
+      changeTheme, changeLanguage, login, logout, setNotificationsEnabled, setBiometricEnabled,
     }}>
       {children}
     </AppContext.Provider>

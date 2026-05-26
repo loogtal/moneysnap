@@ -33,7 +33,8 @@
       "expo-web-browser",
       "expo-apple-authentication",
       "expo-sharing",
-      "expo-notifications"
+      "expo-notifications",
+      "expo-local-authentication"
     ]
   }
 }

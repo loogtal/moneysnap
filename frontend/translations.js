@@ -81,6 +81,21 @@ export const TR = {
     exportPDF: "ออกรายงาน PDF",
     exportPreparing: "กำลังสร้างรายงาน...",
     exportFail: "ส่งออกไม่สำเร็จ",
+    // Search / filter
+    searchTx: "ค้นหาธุรกรรม...", noSearchResult: "ไม่พบรายการที่ค้นหา",
+    // Analysis
+    trend6months: "แนวโน้ม 6 เดือน",
+    // Budget
+    budget: "งบประมาณ",
+    budgetTitle: "ตั้งงบประมาณรายหมวด",
+    budgetSubtitle: "กำหนดงบประมาณสำหรับแต่ละหมวดหมู่ในเดือนนี้",
+    setBudget: "ตั้งงบ", budgetLimit: "งบ", spent: "ใช้ไปแล้ว",
+    budgetWarning: "คุณใกล้เกินงบประมาณแล้ว!",
+    // Biometric
+    biometric: "ความปลอดภัย",
+    biometricToggle: "ล็อกด้วยใบหน้า / ลายนิ้วมือ",
+    unlock: "ปลดล็อก", unlockPrompt: "ยืนยันตัวตนเพื่อเข้าใช้งาน",
+    biometricFail: "ยืนยันตัวตนไม่สำเร็จ", biometricNotSupported: "อุปกรณ์ไม่รองรับการล็อกด้วยชีวมิติ",
     // Errors
     error: "ข้อผิดพลาด", loadFailed: "โหลดข้อมูลไม่สำเร็จ",
     saveFailed: "บันทึกไม่สำเร็จ โปรดลองอีกครั้ง",
@@ -172,6 +187,21 @@ export const TR = {
     exportPDF: "Export PDF Report",
     exportPreparing: "Preparing report...",
     exportFail: "Export failed",
+    // Search / filter
+    searchTx: "Search transactions...", noSearchResult: "No results found",
+    // Analysis
+    trend6months: "6-Month Trend",
+    // Budget
+    budget: "Budget",
+    budgetTitle: "Monthly Budget",
+    budgetSubtitle: "Set a budget limit for each spending category this month.",
+    setBudget: "Set Budget", budgetLimit: "Budget", spent: "Spent",
+    budgetWarning: "You are close to your budget limit!",
+    // Biometric
+    biometric: "Security",
+    biometricToggle: "Lock with Face ID / Fingerprint",
+    unlock: "Unlock", unlockPrompt: "Authenticate to continue",
+    biometricFail: "Authentication failed", biometricNotSupported: "Biometric authentication not supported on this device",
     // Errors
     error: "Error", loadFailed: "Failed to load data",
     saveFailed: "Save failed. Please try again",

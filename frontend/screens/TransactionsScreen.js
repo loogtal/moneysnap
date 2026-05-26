@@ -1,7 +1,8 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useRef } from "react";
 import {
   View, Text, FlatList, ActivityIndicator, StyleSheet,
-  TouchableOpacity, Alert, RefreshControl,
+  TouchableOpacity, Alert, RefreshControl, TextInput,
+  ScrollView,
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import axios from "axios";
@@ -9,17 +10,32 @@ import { API_BASE_URL } from "../config";
 import CategoryBadge from "../components/CategoryBadge";
 import { useApp } from "../contexts/AppContext";
 
+const MONTHS = ["01","02","03","04","05","06","07","08","09","10","11","12"];
+
 export default function TransactionsScreen({ navigation }) {
   const { colors, t } = useApp();
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [search, setSearch] = useState("");
+  const [filterMonth, setFilterMonth] = useState(null);
+  const searchTimer = useRef(null);
+
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = String(now.getMonth() + 1).padStart(2, "0");
 
   useFocusEffect(useCallback(() => { load(); }, []));
 
-  async function load() {
+  async function load(q = search, m = filterMonth) {
     try {
-      const res = await axios.get(`${API_BASE_URL}/transactions`, { params: { page: 1, page_size: 100 } });
+      const params = { page: 1, page_size: 100 };
+      if (q) params.search = q;
+      if (m) {
+        params.year = currentYear;
+        params.month = parseInt(m);
+      }
+      const res = await axios.get(`${API_BASE_URL}/transactions`, { params });
       setTransactions(res.data.results || []);
     } catch {
       Alert.alert(t("error"), t("loadFailed"));
@@ -27,6 +43,18 @@ export default function TransactionsScreen({ navigation }) {
       setLoading(false);
       setRefreshing(false);
     }
+  }
+
+  function onSearchChange(text) {
+    setSearch(text);
+    clearTimeout(searchTimer.current);
+    searchTimer.current = setTimeout(() => load(text, filterMonth), 400);
+  }
+
+  function onMonthSelect(m) {
+    const next = filterMonth === m ? null : m;
+    setFilterMonth(next);
+    load(search, next);
   }
 
   function confirmDelete(item) {
@@ -52,8 +80,44 @@ export default function TransactionsScreen({ navigation }) {
 
   return (
     <View style={s.container}>
+      {/* Search bar */}
+      <View style={s.searchBox}>
+        <Text style={s.searchIcon}>🔍</Text>
+        <TextInput
+          style={s.searchInput}
+          value={search}
+          onChangeText={onSearchChange}
+          placeholder={t("searchTx")}
+          placeholderTextColor={colors.subtext}
+        />
+        {search.length > 0 && (
+          <TouchableOpacity onPress={() => { setSearch(""); load("", filterMonth); }}>
+            <Text style={{ color: colors.subtext, fontSize: 16, paddingHorizontal: 6 }}>✕</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+
+      {/* Month filter */}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={s.monthScroll} contentContainerStyle={s.monthRow}>
+        {MONTHS.map((m) => {
+          const active = filterMonth === m;
+          const isCurrent = m === currentMonth;
+          return (
+            <TouchableOpacity
+              key={m}
+              style={[s.monthChip, active && { backgroundColor: colors.primary, borderColor: colors.primary }]}
+              onPress={() => onMonthSelect(m)}
+            >
+              <Text style={[s.monthChipText, active && { color: "#fff" }]}>
+                {isCurrent && !active ? `${m} ●` : m}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </ScrollView>
+
       {transactions.length === 0 ? (
-        <Text style={s.empty}>{t("noData")}</Text>
+        <Text style={s.empty}>{search || filterMonth ? t("noSearchResult") : t("noData")}</Text>
       ) : (
         <FlatList
           data={transactions}
@@ -91,6 +155,21 @@ export default function TransactionsScreen({ navigation }) {
 const styles = (c) => StyleSheet.create({
   container: { flex: 1, backgroundColor: c.bg, padding: 12 },
   center: { flex: 1, justifyContent: "center" },
+  searchBox: {
+    flexDirection: "row", alignItems: "center",
+    backgroundColor: c.surface, borderRadius: 10,
+    borderWidth: 1, borderColor: c.border,
+    paddingHorizontal: 10, marginBottom: 10, height: 42,
+  },
+  searchIcon: { fontSize: 16, marginRight: 6 },
+  searchInput: { flex: 1, fontSize: 14, color: c.text },
+  monthScroll: { maxHeight: 40, marginBottom: 10 },
+  monthRow: { gap: 6, paddingRight: 4 },
+  monthChip: {
+    paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20,
+    borderWidth: 1, borderColor: c.border, backgroundColor: c.surface,
+  },
+  monthChipText: { fontSize: 13, color: c.text, fontWeight: "600" },
   empty: { marginTop: 40, textAlign: "center", color: c.subtext, fontSize: 16 },
   card: {
     backgroundColor: c.card, borderRadius: 12, padding: 14, marginBottom: 10,

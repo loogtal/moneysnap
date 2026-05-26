@@ -4,6 +4,7 @@ import {
   ScrollView, Alert, Image, ActivityIndicator, Switch,
 } from "react-native";
 import axios from "axios";
+import * as LocalAuthentication from "expo-local-authentication";
 import { API_BASE_URL } from "../config";
 import { useApp } from "../contexts/AppContext";
 import { requestPermission, scheduleWeeklyReminder, cancelWeeklyReminder } from "../services/notifications";
@@ -44,15 +45,20 @@ function Divider({ colors }) {
 }
 
 export default function SettingsScreen() {
-  const { colors, themeMode, language, user, t, changeTheme, changeLanguage, logout, notificationsEnabled, setNotificationsEnabled } = useApp();
+  const { colors, themeMode, language, user, t, changeTheme, changeLanguage, logout, notificationsEnabled, setNotificationsEnabled, biometricEnabled, setBiometricEnabled } = useApp();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [togglingNotif, setTogglingNotif] = useState(false);
-  const s = styles(colors);
+  const [biometricSupported, setBiometricSupported] = useState(false);
 
   useEffect(() => {
-    fetchProfile();
+    LocalAuthentication.hasHardwareAsync().then((has) => {
+      if (has) LocalAuthentication.isEnrolledAsync().then(setBiometricSupported);
+    });
   }, []);
+  const s = styles(colors);
+
+  useEffect(() => { fetchProfile(); }, []);
 
   async function fetchProfile() {
     try {
@@ -188,6 +194,21 @@ export default function SettingsScreen() {
           )}
         </View>
       </Section>
+
+      {/* Biometric */}
+      {biometricSupported && (
+        <Section label={t("biometric")} colors={colors}>
+          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+            <Text style={{ fontSize: 14, color: colors.text, flex: 1 }}>{t("biometricToggle")}</Text>
+            <Switch
+              value={biometricEnabled}
+              onValueChange={setBiometricEnabled}
+              trackColor={{ false: colors.border, true: colors.primary }}
+              thumbColor="#ffffff"
+            />
+          </View>
+        </Section>
+      )}
 
       {/* Theme */}
       <Section label={t("theme")} colors={colors}>
