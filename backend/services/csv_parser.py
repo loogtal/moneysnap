@@ -1,5 +1,6 @@
 import csv
 import io
+import re
 from datetime import datetime
 from typing import Optional
 
@@ -7,96 +8,170 @@ from typing import Optional
 def _clean_amount(value: str) -> float:
     if not value:
         return 0.0
-    return float(value.replace(",", "").strip() or 0)
+    cleaned = re.sub(r"[^\d.]", "", value.replace(",", ""))
+    try:
+        return float(cleaned) if cleaned else 0.0
+    except ValueError:
+        return 0.0
 
 
 def _parse_date(value: str) -> Optional[datetime]:
     value = value.strip()
-    formats = [
-        "%d/%m/%Y", "%d/%m/%y", "%Y-%m-%d",
-        "%d-%m-%Y", "%d %b %Y", "%Y/%m/%d",
-        "%d/%m/%Y %H:%M:%S", "%d/%m/%Y %H:%M",
-    ]
-    for fmt in formats:
+    if not value:
+        return None
+
+    # Normalize separators
+    value = re.sub(r"[.\-]", "/", value)
+    # Take only the date part if datetime
+    date_part = value.split(" ")[0].split("T")[0]
+    parts = date_part.split("/")
+
+    if len(parts) == 3:
         try:
-            return datetime.strptime(value.split(" ")[0] if len(value) > 10 and " " in value else value, fmt.split(" ")[0])
+            a, b, c = int(parts[0]), int(parts[1]), int(parts[2])
         except ValueError:
+            pass
+        else:
+            # Detect Buddhist Era (year > 2500) in any position
+            if c > 2500:
+                c -= 543
+            elif a > 2500:
+                a -= 543
+            # Year heuristic: 4-digit in position c → DD/MM/YYYY
+            if c > 31:
+                day, month, year = a, b, c
+            # 4-digit in position a → YYYY/MM/DD
+            elif a > 31:
+                year, month, day = a, b, c
+            else:
+                day, month, year = a, b, c
+            if year < 100:
+                year += 2000
             try:
-                return datetime.strptime(value, fmt)
+                return datetime(year, month, day)
             except ValueError:
-                continue
+                pass
+
+    for fmt in ("%d/%m/%Y", "%Y/%m/%d", "%d/%m/%y"):
+        try:
+            return datetime.strptime(date_part, fmt)
+        except ValueError:
+            continue
     return None
 
 
-def _detect_bank_and_columns(headers: list[str]) -> dict:
+# Keyword sets for each bank
+_BANK_KEYWORDS = {
+    "KBank": ["กสิกร", "kasikorn", "kbank"],
+    "SCB": ["ไทยพาณิชย์", "scb", "siam commercial"],
+    "BBL": ["กรุงเทพ", "bangkok bank", "bbl"],
+    "KTB": ["กรุงไทย", "krungthai", "ktb"],
+    "TTB": ["ทหารไทย", "ธนชาต", "ttb", "tmb"],
+    "BAY": ["กรุงศรี", "ayudhya", "bay", "krungsri"],
+    "CIMB": ["cimb"],
+    "UOB": ["uob", "ยูโอบี"],
+    "GSB": ["ออมสิน", "gsb", "government savings"],
+    "BAAC": ["ธกส", "baac", "agriculture"],
+    "KKP": ["เกียรตินาคิน", "knk", "kkp"],
+}
+
+
+def _detect_bank(text: str) -> str:
+    lower = text.lower()
+    for bank, keywords in _BANK_KEYWORDS.items():
+        if any(kw in lower for kw in keywords):
+            return bank
+    return "Unknown"
+
+
+def _detect_columns(headers: list[str]) -> dict:
     lowered = [h.lower().strip() for h in headers]
+    col_map = {}
+    for i, h in enumerate(lowered):
+        if "วันที่" in h or "date" in h or "เวลา" in h:
+            col_map.setdefault("date", i)
+        if any(w in h for w in ["รายละเอียด", "รายการ", "description", "detail", "note", "รายรับรายจ่าย", "channel"]):
+            col_map.setdefault("description", i)
+        if any(w in h for w in ["เดบิต", "debit", "ถอน", "withdrawal", "จ่าย", "รายจ่าย"]):
+            col_map.setdefault("debit", i)
+        if any(w in h for w in ["เครดิต", "credit", "ฝาก", "deposit", "รับ", "รายรับ"]):
+            col_map.setdefault("credit", i)
+        if "จำนวน" in h and "debit" not in col_map and "credit" not in col_map:
+            col_map.setdefault("amount", i)
+        if any(w in h for w in ["ประเภท", "type", "transaction type"]):
+            col_map.setdefault("tx_type", i)
+    return col_map
 
-    def has(keyword):
-        return any(keyword in h for h in lowered)
 
-    if has("เดบิต") or has("เครดิต") or has("debit") or has("credit"):
-        if has("เกียรตินาคิน") or has("knk"):
-            bank = "KKP"
-        elif has("กสิกร") or has("kasikorn") or has("kbank"):
-            bank = "KBank"
-        elif has("ไทยพาณิชย์") or has("scb"):
-            bank = "SCB"
-        elif has("กรุงเทพ") or has("bangkok") or has("bbl"):
-            bank = "BBL"
-        elif has("ทหารไทย") or has("ttb") or has("tmb"):
-            bank = "TTB"
-        elif has("กรุงไทย") or has("ktb"):
-            bank = "KTB"
-        else:
-            bank = "Unknown"
+def _extract_receiver(description: str) -> Optional[str]:
+    """Best-effort extraction of a receiver name from Thai bank description text."""
+    if not description:
+        return None
+    # Patterns like "โอนเงิน ไปยัง [account] ชื่อ" or "ผู้รับ: Name"
+    for pattern in [
+        r"ผู้รับ[:\s]+(.+)",
+        r"ไปยัง\s+\S+\s+(.+)",
+        r"TO\s+\S+\s+(.+)",
+        r"TRANSFER TO\s+(.+)",
+    ]:
+        m = re.search(pattern, description, re.IGNORECASE)
+        if m:
+            name = m.group(1).strip()
+            if 2 <= len(name) <= 60:
+                return name
+    return None
 
-        col_map = {}
-        for i, h in enumerate(lowered):
-            if "วันที่" in h or "date" in h:
-                col_map.setdefault("date", i)
-            if "รายละเอียด" in h or "รายการ" in h or "description" in h or "detail" in h:
-                col_map.setdefault("description", i)
-            if ("เดบิต" in h or "debit" in h or "ถอน" in h or "withdrawal" in h) and "จำนวน" in h or h in ("เดบิต", "debit", "withdrawal", "ถอน"):
-                col_map.setdefault("debit", i)
-            if ("เครดิต" in h or "credit" in h or "ฝาก" in h or "deposit" in h) and "จำนวน" in h or h in ("เครดิต", "credit", "deposit", "ฝาก"):
-                col_map.setdefault("credit", i)
 
-        return {"bank": bank, "col_map": col_map}
-
-    return {"bank": "Unknown", "col_map": {}}
+def _is_footer_row(row: list[str]) -> bool:
+    """Skip summary/total rows that appear at the bottom of statements."""
+    joined = " ".join(row).lower()
+    return any(w in joined for w in ["ยอดรวม", "total", "รวม", "grand total", "subtotal", "balance forward"])
 
 
 def parse_bank_csv(content: bytes) -> list[dict]:
-    try:
-        text = content.decode("utf-8-sig")
-    except UnicodeDecodeError:
-        text = content.decode("tis-620", errors="replace")
+    # Try common encodings
+    for encoding in ("utf-8-sig", "utf-8", "tis-620", "cp874"):
+        try:
+            text = content.decode(encoding)
+            break
+        except (UnicodeDecodeError, LookupError):
+            continue
+    else:
+        text = content.decode("utf-8", errors="replace")
 
     reader = csv.reader(io.StringIO(text))
     rows = list(reader)
+    if not rows:
+        return []
 
+    # Detect bank from first few rows of the file
+    header_text = " ".join(" ".join(r) for r in rows[:8])
+    bank = _detect_bank(header_text)
+
+    # Find the header row (first row containing date + debit/credit keywords)
     header_idx = None
     headers = []
     for i, row in enumerate(rows):
         joined = " ".join(row).lower()
-        if ("วันที่" in joined or "date" in joined) and ("เดบิต" in joined or "debit" in joined or "ถอน" in joined or "เครดิต" in joined or "credit" in joined or "ฝาก" in joined):
+        has_date = "วันที่" in joined or "date" in joined
+        has_amount = any(w in joined for w in ["เดบิต", "debit", "เครดิต", "credit", "ถอน", "ฝาก", "จำนวน"])
+        if has_date and has_amount:
             header_idx = i
             headers = row
             break
 
-    if header_idx is None:
+    if header_idx is None or not headers:
         return []
 
-    info = _detect_bank_and_columns(headers)
-    col_map = info["col_map"]
-    bank = info["bank"]
-
+    col_map = _detect_columns(headers)
     if "date" not in col_map:
         return []
 
     transactions = []
     for row in rows[header_idx + 1:]:
         if not row or all(cell.strip() == "" for cell in row):
+            continue
+        if _is_footer_row(row):
             continue
         if len(row) <= max(col_map.values(), default=0):
             continue
@@ -105,6 +180,23 @@ def parse_bank_csv(content: bytes) -> list[dict]:
         description = row[col_map["description"]].strip() if "description" in col_map else ""
         debit = _clean_amount(row[col_map["debit"]]) if "debit" in col_map else 0.0
         credit = _clean_amount(row[col_map["credit"]]) if "credit" in col_map else 0.0
+
+        # Some banks use a single amount + type column
+        if debit == 0 and credit == 0 and "amount" in col_map:
+            raw_amount = _clean_amount(row[col_map["amount"]])
+            if "tx_type" in col_map:
+                tx_type_str = row[col_map["tx_type"]].lower().strip()
+                if any(w in tx_type_str for w in ["debit", "ถอน", "จ่าย", "expense", "dr"]):
+                    debit = raw_amount
+                else:
+                    credit = raw_amount
+            else:
+                # Negative amounts → debit
+                raw_cell = row[col_map["amount"]].strip()
+                if raw_cell.startswith("-"):
+                    debit = raw_amount
+                else:
+                    credit = raw_amount
 
         if debit == 0 and credit == 0:
             continue
@@ -115,6 +207,7 @@ def parse_bank_csv(content: bytes) -> list[dict]:
 
         amount = debit if debit > 0 else credit
         tx_type = "expense" if debit > 0 else "income"
+        receiver_name = _extract_receiver(description)
 
         transactions.append({
             "transaction_date": parsed_date,
@@ -123,7 +216,7 @@ def parse_bank_csv(content: bytes) -> list[dict]:
             "bank_name": bank,
             "note": description,
             "sender_name": None,
-            "receiver_name": None,
+            "receiver_name": receiver_name,
         })
 
     return transactions

@@ -118,20 +118,26 @@ def extract_slip_data(image_path: str, hint: str = None) -> dict:
             image_b64 = base64.b64encode(f.read()).decode()
 
     hint_section = f"\n\nหมายเหตุจากผู้ใช้: {hint}" if hint else ""
-    prompt = f"""อ่านสลิปธนาคารไทยในภาพนี้แล้วสกัดข้อมูลให้ครบถ้วน
+    prompt = f"""อ่านสลิปธนาคารไทยหรือหลักฐานการชำระเงินในภาพนี้แล้วสกัดข้อมูล
+
+รองรับ: สลิปโอนเงินธนาคาร, PromptPay, QR Payment, บัตรเครดิต/เดบิต
 
 ตอบในรูปแบบ JSON นี้เท่านั้น ห้ามมีข้อความอื่นนอก JSON:
 {{
-  "sender_name": "ชื่อผู้โอน/ผู้ส่ง (null ถ้าไม่มี)",
-  "receiver_name": "ชื่อผู้รับเงิน (null ถ้าไม่มี)",
+  "sender_name": "ชื่อผู้โอน/ผู้ส่ง — ถ้า PromptPay ให้ใส่ชื่อเจ้าของบัญชีต้นทาง (null ถ้าไม่มี)",
+  "receiver_name": "ชื่อผู้รับเงิน — ถ้า PromptPay ให้ใส่ชื่อผู้รับหรือชื่อร้านค้า (null ถ้าไม่มี)",
   "amount": 0.0,
-  "bank_name": "ชื่อธนาคาร เช่น KBank SCB BBL KTB TTB",
+  "bank_name": "ธนาคาร เช่น KBank SCB BBL KTB TTB BAY CIMB UOB หรือ PromptPay",
   "date_str": "วันที่ DD/MM/YYYY (null ถ้าไม่มี)",
   "transaction_type": "income หรือ expense",
   "raw_text": "ข้อความทั้งหมดที่อ่านได้จากสลิป"
 }}
 
-กฎ: amount=เงินโอนไม่ใช่ยอดคงเหลือ, date_str=DD/MM/YYYY (ลบ543ถ้าพ.ศ.), transaction_type=income/expense{hint_section}"""
+กฎสำคัญ:
+- amount = จำนวนเงินที่โอน ไม่ใช่ยอดคงเหลือ
+- date_str = รูปแบบ DD/MM/YYYY เท่านั้น หากเป็น พ.ศ. ให้ลบ 543 ก่อน
+- transaction_type = expense ถ้าผู้ใช้จ่ายเงิน, income ถ้าผู้ใช้รับเงิน
+- bank_name = "PromptPay" ถ้าเป็นสลิป PromptPay หรือ QR Payment{hint_section}"""
 
     payload = {
         "contents": [{

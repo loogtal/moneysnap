@@ -7,7 +7,7 @@ export const TR = {
     thisMonth: "ภาพรวมเดือนนี้", recentTx: "ธุรกรรมล่าสุด",
     noTransactions: "ยังไม่มีธุรกรรม",
     // Scan
-    scanSlip: "สแกนสลิปธนาคาร", takePhoto: "ถ่ายรูปสลิป",
+    scanSlip: "สแกนสลิปธนาคาร", scanSupports: "รองรับ", takePhoto: "ถ่ายรูปสลิป",
     fromLibrary: "เลือกจากคลัง", scanResult: "ผลการสแกน",
     sender: "ผู้ส่ง", receiver: "ผู้รับ", amount: "จำนวนเงิน",
     bank: "ธนาคาร", date: "วันที่", type: "ประเภท",
@@ -287,7 +287,7 @@ export const TR = {
     thisMonth: "This Month's Overview", recentTx: "Recent Transactions",
     noTransactions: "No transactions yet",
     // Scan
-    scanSlip: "Scan Bank Slip", takePhoto: "Take Photo",
+    scanSlip: "Scan Bank Slip", scanSupports: "Supports", takePhoto: "Take Photo",
     fromLibrary: "Choose from Library", scanResult: "Scan Result",
     sender: "Sender", receiver: "Receiver", amount: "Amount",
     bank: "Bank", date: "Date", type: "Type",

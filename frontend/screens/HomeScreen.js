@@ -9,7 +9,6 @@ import { API_BASE_URL } from "../config";
 import SpendingChart from "../components/SpendingChart";
 import SlipCard from "../components/SlipCard";
 import { useApp } from "../contexts/AppContext";
-import { TIPS } from "../data/financialTips";
 
 function Avatar({ uri, name, size, colors }) {
   const initial = name ? name.charAt(0).toUpperCase() : "?";
@@ -32,15 +31,13 @@ function Avatar({ uri, name, size, colors }) {
 }
 
 export default function HomeScreen({ navigation }) {
-  const { colors, t, user, language, privacyMode, togglePrivacy } = useApp();
+  const { colors, t, user, privacyMode, togglePrivacy } = useApp();
   const [summary, setSummary] = useState([]);
   const [recent, setRecent] = useState([]);
   const [loading, setLoading] = useState(true);
   const [todayIncome, setTodayIncome] = useState(0);
   const [todayExpense, setTodayExpense] = useState(0);
 
-  const tips = TIPS[language === "th" ? "th" : "en"];
-  const [tipIdx, setTipIdx] = useState(new Date().getDate() % tips.length);
 
   useEffect(() => {
     axios.get(`${API_BASE_URL.replace("/api", "")}/health`, { timeout: 10000 }).catch(() => {});
@@ -170,6 +167,7 @@ export default function HomeScreen({ navigation }) {
 
       <View style={s.grid}>
         {[
+          { label: t("quickAdd"), icon: "✍️", screen: "QuickAdd" },
           { label: t("scan"), icon: "📷", screen: "Scan" },
           { label: t("transactions"), icon: "📋", screen: "Transactions" },
           { label: t("analysis"), icon: "📊", screen: "Analysis" },
@@ -178,18 +176,13 @@ export default function HomeScreen({ navigation }) {
           { label: t("goals"), icon: "🎯", screen: "Goals" },
           { label: t("recurring"), icon: "🔄", screen: "Recurring" },
           { label: t("debts"), icon: "🤝", screen: "Debts" },
-          { label: t("netWorth"), icon: "💎", screen: "NetWorth" },
-          { label: t("billSplit"), icon: "🧮", screen: "BillSplit" },
-          { label: t("achievements"), icon: "🏆", screen: "Achievements" },
           { label: t("calendar"), icon: "📅", screen: "Calendar" },
-          { label: t("currency"), icon: "💱", screen: "Currency" },
           { label: t("chat"), icon: "🤖", screen: "Chat" },
           { label: t("accounts"), icon: "🏦", screen: "Accounts" },
           { label: t("report"), icon: "📊", screen: "MonthlyReport" },
           { label: t("merchants"), icon: "🏪", screen: "Merchants" },
           { label: t("health"), icon: "💪", screen: "Health" },
           { label: t("forecast"), icon: "🔮", screen: "Forecast" },
-          { label: t("quickAdd"), icon: "✍️", screen: "QuickAdd" },
           { label: t("compare"), icon: "⚖️", screen: "Compare" },
         ].map(({ label, icon, screen }) => (
           <TouchableOpacity
@@ -207,18 +200,6 @@ export default function HomeScreen({ navigation }) {
         <ActivityIndicator size="large" color={colors.primary} style={s.loader} />
       ) : (
         <>
-          <TouchableOpacity
-            style={s.tipCard}
-            onPress={() => setTipIdx((i) => (i + 1) % tips.length)}
-            activeOpacity={0.85}
-          >
-            <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 6 }}>
-              <Text style={{ fontSize: 14, marginRight: 6 }}>💡</Text>
-              <Text style={s.tipLabel}>{t("dailyTip")}</Text>
-            </View>
-            <Text style={s.tipText}>{tips[tipIdx]}</Text>
-          </TouchableOpacity>
-
           <SpendingChart data={thisMonth} />
           <Text style={s.subheading}>{t("recentTx")}</Text>
           {recent.length === 0 ? (
@@ -263,11 +244,4 @@ const styles = (c) => StyleSheet.create({
   todayLabel: { fontSize: 11, fontWeight: "700", color: "#ffffff99", textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 4 },
   todayRow: { flexDirection: "row", gap: 16 },
   todayNum: { fontSize: 20, fontWeight: "800", color: "#fff" },
-  tipCard: {
-    backgroundColor: c.surface, borderRadius: 12, padding: 14,
-    borderWidth: 1, borderColor: c.border, marginBottom: 16,
-    borderLeftWidth: 3, borderLeftColor: "#f59e0b",
-  },
-  tipLabel: { fontSize: 11, fontWeight: "700", color: "#f59e0b", textTransform: "uppercase", letterSpacing: 0.5 },
-  tipText: { fontSize: 13, color: c.text, lineHeight: 19 },
 });

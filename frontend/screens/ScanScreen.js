@@ -140,6 +140,11 @@ export default function ScanScreen({ navigation }) {
         </TouchableOpacity>
       </View>
 
+      <View style={[s.supportedBox, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+        <Text style={[s.supportedLabel, { color: colors.subtext }]}>{t("scanSupports")}</Text>
+        <Text style={[s.supportedText, { color: colors.text }]}>KBank · SCB · BBL · KTB · BAY · TTB · PromptPay · QR Payment</Text>
+      </View>
+
       {loading && (
         <View style={s.loadingBox}>
           <ActivityIndicator size="large" color={colors.primary} />
@@ -225,4 +230,7 @@ const styles = (c) => StyleSheet.create({
   hintBox: { marginTop: 10, gap: 8 },
   hintInput: { borderWidth: 1, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, fontSize: 14, minHeight: 60, textAlignVertical: "top" },
   retryBtn: { borderRadius: 8, paddingVertical: 10, alignItems: "center" },
+  supportedBox: { borderRadius: 10, padding: 10, borderWidth: 1, marginBottom: 16 },
+  supportedLabel: { fontSize: 10, fontWeight: "700", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 3 },
+  supportedText: { fontSize: 12, fontWeight: "600" },
 });
