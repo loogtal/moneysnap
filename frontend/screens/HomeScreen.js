@@ -174,6 +174,9 @@ export default function HomeScreen({ navigation }) {
           { label: t("achievements"), icon: "🏆", screen: "Achievements" },
           { label: t("calendar"), icon: "📅", screen: "Calendar" },
           { label: t("currency"), icon: "💱", screen: "Currency" },
+          { label: t("chat"), icon: "🤖", screen: "Chat" },
+          { label: t("accounts"), icon: "🏦", screen: "Accounts" },
+          { label: t("report"), icon: "📊", screen: "MonthlyReport" },
         ].map(({ label, icon, screen }) => (
           <TouchableOpacity
             key={screen}

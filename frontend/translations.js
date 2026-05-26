@@ -205,6 +205,17 @@ export const TR = {
     budgetAlertOver: "เกินงบ ❌", budgetAlertOk: "ผ่านงบ ✅",
     budgetAlertNoBudget: "ไม่ได้ตั้งงบประมาณไว้",
     todayOverview: "วันนี้",
+    // AI Chat
+    chat: "AI Chat", chatTitle: "สนทนากับ AI",
+    chatPlaceholder: "พิมพ์คำถามเกี่ยวกับการเงิน...",
+    // Accounts
+    accounts: "บัญชี", accountsTitle: "บัญชีหลายสกุลเงิน",
+    accountAdd: "เพิ่มบัญชี", accountBalance: "ยอดคงเหลือ",
+    accountTotalTHB: "ยอดรวม (THB)", accountEmpty: "ยังไม่มีบัญชี",
+    accountName: "ชื่อบัญชี", accountNameHint: "เช่น กระเป๋าหลัก, USD Savings",
+    accountNameRequired: "กรุณาระบุชื่อบัญชี",
+    // Monthly Report
+    report: "รายงาน", reportTitle: "รายงานรายเดือน", reportGenerate: "ออก PDF",
     // PIN Lock
     pinLock: "PIN Lock", pinEnable: "เปิดใช้งาน PIN", pinDisable: "ปิดใช้งาน PIN",
     pinEnabled: "PIN ถูกเปิดใช้งานแล้ว",
@@ -438,6 +449,17 @@ export const TR = {
     budgetAlertOver: "Over budget ❌", budgetAlertOk: "Within budget ✅",
     budgetAlertNoBudget: "No budget set",
     todayOverview: "Today",
+    // AI Chat
+    chat: "AI Chat", chatTitle: "Chat with AI",
+    chatPlaceholder: "Ask about your finances...",
+    // Accounts
+    accounts: "Accounts", accountsTitle: "Multi-currency Accounts",
+    accountAdd: "Add Account", accountBalance: "Balance",
+    accountTotalTHB: "Total (THB)", accountEmpty: "No accounts yet",
+    accountName: "Account Name", accountNameHint: "e.g. Main Wallet, USD Savings",
+    accountNameRequired: "Please enter an account name",
+    // Monthly Report
+    report: "Report", reportTitle: "Monthly Report", reportGenerate: "Export PDF",
     // PIN Lock
     pinLock: "PIN Lock", pinEnable: "Enable PIN", pinDisable: "Disable PIN",
     pinEnabled: "PIN lock is enabled",

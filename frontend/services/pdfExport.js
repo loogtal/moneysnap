@@ -54,6 +54,26 @@ export async function exportMonthlyReport({ transactions, month, language, userN
 
   const netColor = net >= 0 ? "green" : "red";
 
+  const byCategory = {};
+  transactions.filter((t) => t.transaction_type !== "income").forEach((t) => {
+    const cat = catLabel(t.category || "other", lang);
+    byCategory[cat] = (byCategory[cat] || 0) + (t.amount || 0);
+  });
+  const catEntries = Object.entries(byCategory).sort((a, b) => b[1] - a[1]).slice(0, 8);
+  const maxCatAmt = catEntries[0]?.[1] || 1;
+
+  const catBarsHtml = catEntries.map(([cat, amt]) => {
+    const pct = Math.round((amt / maxCatAmt) * 100);
+    return `<div style="margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px">
+        <span>${cat}</span><span style="color:#ef4444">฿${amt.toFixed(0)}</span>
+      </div>
+      <div style="background:#f0f0f0;height:8px;border-radius:4px;overflow:hidden">
+        <div style="width:${pct}%;height:8px;background:#ef4444;border-radius:4px"></div>
+      </div>
+    </div>`;
+  }).join("");
+
   const html = `<!DOCTYPE html>
 <html>
 <head>
@@ -95,6 +115,9 @@ export async function exportMonthlyReport({ transactions, month, language, userN
       <div class="box-value ${netColor}">฿${Math.abs(net).toFixed(0)}</div>
     </div>
   </div>
+
+  ${catEntries.length > 0 ? `<div class="section-title" style="margin-top:20px">${isEn ? "Spending by Category" : "รายจ่ายตามหมวดหมู่"}</div>
+  <div style="margin-bottom:20px">${catBarsHtml}</div>` : ""}
 
   <div class="section-title">${L.txSection} (${transactions.length})</div>
   <table>

@@ -9,7 +9,7 @@ if str(ROOT) not in sys.path:
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from backend.routers import slips, transactions, analysis, auth, budgets
+from backend.routers import slips, transactions, analysis, auth, budgets, chat
 
 
 @asynccontextmanager
@@ -33,6 +33,7 @@ app.include_router(slips.router, prefix="/api/slips", tags=["slips"])
 app.include_router(transactions.router, prefix="/api/transactions", tags=["transactions"])
 app.include_router(analysis.router, prefix="/api/analysis", tags=["analysis"])
 app.include_router(budgets.router, prefix="/api/budgets", tags=["budgets"])
+app.include_router(chat.router, prefix="/api/chat", tags=["chat"])
 
 
 @app.get("/health")

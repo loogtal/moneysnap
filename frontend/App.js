@@ -28,6 +28,9 @@ import OnboardingScreen from "./screens/OnboardingScreen";
 import PinLockScreen from "./screens/PinLockScreen";
 import CalendarScreen from "./screens/CalendarScreen";
 import CurrencyScreen from "./screens/CurrencyScreen";
+import ChatScreen from "./screens/ChatScreen";
+import AccountsScreen from "./screens/AccountsScreen";
+import MonthlyReportScreen from "./screens/MonthlyReportScreen";
 
 axios.defaults.timeout = 30000;
 
@@ -178,6 +181,9 @@ function AppNavigator() {
         <Stack.Screen name="Achievements" component={AchievementsScreen} options={({ navigation }) => ({ title: t("achievementsTitle"), headerRight: () => settingsButton(navigation) })} />
         <Stack.Screen name="Calendar" component={CalendarScreen} options={({ navigation }) => ({ title: t("calendarTitle"), headerRight: () => settingsButton(navigation) })} />
         <Stack.Screen name="Currency" component={CurrencyScreen} options={({ navigation }) => ({ title: t("currencyTitle"), headerRight: () => settingsButton(navigation) })} />
+        <Stack.Screen name="Chat" component={ChatScreen} options={({ navigation }) => ({ title: t("chatTitle"), headerRight: () => settingsButton(navigation) })} />
+        <Stack.Screen name="Accounts" component={AccountsScreen} options={({ navigation }) => ({ title: t("accountsTitle"), headerRight: () => settingsButton(navigation) })} />
+        <Stack.Screen name="MonthlyReport" component={MonthlyReportScreen} options={({ navigation }) => ({ title: t("reportTitle"), headerRight: () => settingsButton(navigation) })} />
         <Stack.Screen name="Settings" component={SettingsScreen} options={{ title: t("settings"), headerRight: () => null }} />
       </Stack.Navigator>
     </NavigationContainer>

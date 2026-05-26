@@ -25,6 +25,27 @@ export default function ScanScreen({ navigation }) {
 
   const STAGES = [t("stage0"), t("stage1"), t("stage2"), t("stage3")];
 
+  async function checkBudgetWarning(category) {
+    if (!category) return;
+    try {
+      const [budgetsRes, analysisRes] = await Promise.all([
+        axios.get(`${API_BASE_URL}/budgets`, { timeout: 10000 }),
+        axios.get(`${API_BASE_URL}/analysis/monthly`, { timeout: 10000 }),
+      ]);
+      const budget = (budgetsRes.data || []).find((b) => b.category === category);
+      if (!budget || !budget.amount) return;
+      const month = new Date().toISOString().slice(0, 7);
+      const row = (analysisRes.data.summary || []).find((r) => r.month === month && r.category === category && r.transaction_type !== "income");
+      const spent = row?.total || 0;
+      const pct = spent / budget.amount;
+      if (pct >= 0.8 && pct < 1) {
+        Alert.alert("⚠️ " + t("budgetWarning"), `${category}: ฿${spent.toFixed(0)} / ฿${budget.amount.toFixed(0)} (${Math.round(pct * 100)}%)`);
+      } else if (pct >= 1) {
+        Alert.alert("🚨 " + t("budgetAlertOver"), `${category}: ฿${spent.toFixed(0)} / ฿${budget.amount.toFixed(0)}`);
+      }
+    } catch {}
+  }
+
   useEffect(() => {
     axios.get(`${BASE_URL}/health`, { timeout: 10000 }).catch(() => {});
     return () => clearInterval(timer.current);
@@ -79,6 +100,9 @@ export default function ScanScreen({ navigation }) {
       if (notificationsEnabled) {
         const amt = res.data.amount?.toFixed(2) ?? "0.00";
         sendScanSuccess(t("notifScanTitle"), `฿${amt}`);
+      }
+      if (res.data.transaction_type !== "income") {
+        checkBudgetWarning(res.data.category);
       }
     } catch (err) {
       const status = err?.response?.status;
