@@ -175,6 +175,24 @@ export const TR = {
     forecastDaysLeft: "วันที่เหลือในเดือน",
     // Share
     shareSummary: "แชร์สรุปเดือน",
+    // Net Worth
+    netWorth: "ทรัพย์สินสุทธิ", netWorthTitle: "Net Worth", netWorthSubtitle: "สินทรัพย์ลบหนี้สิน",
+    assets: "สินทรัพย์", liabilities: "หนี้สิน", add: "เพิ่ม", type: "ประเภท",
+    nwEmptyAssets: "ยังไม่มีสินทรัพย์", nwEmptyLiab: "ยังไม่มีหนี้สิน",
+    // Bill Split
+    billSplit: "หารบิล", billSplitTitle: "หารค่าใช้จ่าย", billSplitSubtitle: "คำนวณค่าใช้จ่ายต่อคน",
+    totalBill: "ยอดรวม", tipPercent: "ทิป", tip: "ทิป", numPeople: "จำนวนคน",
+    perPerson: "แยกรายคน (กำหนดเองได้)", person: "คนที่",
+    grandTotal: "ยอดรวมทั้งหมด", people: "คน", avgPerPerson: "เฉลี่ยต่อคน",
+    // Achievements
+    achievements: "ความสำเร็จ", achievementsTitle: "ความสำเร็จ", achievementsSubtitle: "สะสม badge จากการใช้แอป",
+    achieved: "สำเร็จแล้ว",
+    achieveFirstScan: "สแกนสลิปแรก", achieveTenScans: "สแกน 10 ครั้ง",
+    achieveFirstBudget: "ตั้งงบแรก", achieveFirstGoal: "ตั้งเป้าหมายแรก",
+    achieveGoalDone: "สำเร็จเป้าหมาย", achieveFirstRecur: "บันทึกรายจ่ายประจำ",
+    achieveFirstDebt: "บันทึกหนี้แรก", achieveShared: "แชร์สรุป",
+    achieveDarkMode: "เปิด Dark Mode", achieveBilingual: "เปลี่ยนภาษา",
+    achieveSave10k: "ออมเงิน ฿10,000", achieveImport: "นำเข้า Statement",
     // Errors
     error: "ข้อผิดพลาด", loadFailed: "โหลดข้อมูลไม่สำเร็จ",
     saveFailed: "บันทึกไม่สำเร็จ โปรดลองอีกครั้ง",
@@ -360,6 +378,24 @@ export const TR = {
     forecastDaysLeft: "Days remaining",
     // Share
     shareSummary: "Share Summary",
+    // Net Worth
+    netWorth: "Net Worth", netWorthTitle: "Net Worth", netWorthSubtitle: "Assets minus liabilities",
+    assets: "Assets", liabilities: "Liabilities", add: "Add", type: "Type",
+    nwEmptyAssets: "No assets yet", nwEmptyLiab: "No liabilities yet",
+    // Bill Split
+    billSplit: "Bill Split", billSplitTitle: "Split Bill", billSplitSubtitle: "Calculate cost per person",
+    totalBill: "Total Bill", tipPercent: "Tip", tip: "Tip", numPeople: "Number of People",
+    perPerson: "Per Person (custom amounts)", person: "Person",
+    grandTotal: "Grand Total", people: "people", avgPerPerson: "avg per person",
+    // Achievements
+    achievements: "Achievements", achievementsTitle: "Achievements", achievementsSubtitle: "Earn badges as you use the app",
+    achieved: "achieved",
+    achieveFirstScan: "First Scan", achieveTenScans: "10 Scans",
+    achieveFirstBudget: "Set First Budget", achieveFirstGoal: "First Goal",
+    achieveGoalDone: "Goal Achieved", achieveFirstRecur: "First Recurring",
+    achieveFirstDebt: "First Debt", achieveShared: "Shared Summary",
+    achieveDarkMode: "Dark Mode On", achieveBilingual: "Changed Language",
+    achieveSave10k: "Saved ฿10,000", achieveImport: "Imported Statement",
     // Errors
     error: "Error", loadFailed: "Failed to load data",
     saveFailed: "Save failed. Please try again",

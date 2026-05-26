@@ -8,6 +8,7 @@ import { API_BASE_URL } from "../config";
 import AiTipCard from "../components/AiTipCard";
 import SpendingChart from "../components/SpendingChart";
 import { useApp } from "../contexts/AppContext";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { exportMonthlyReport } from "../services/pdfExport";
 import { exportTransactionsCSV } from "../services/csvExport";
 import { shareMonthSummary } from "../services/shareSummary";
@@ -98,6 +99,7 @@ export default function AnalysisScreen({ navigation }) {
       const byCategory = {};
       rows.filter((r) => r.transaction_type !== "income").forEach((r) => { byCategory[r.category] = (byCategory[r.category] || 0) + r.total; });
       await shareMonthSummary({ month, income, expense, net: income - expense, byCategory, language });
+      await AsyncStorage.setItem("shared_once", "true").catch(() => {});
     } catch {
       Alert.alert(t("error"), t("exportFail"));
     } finally {

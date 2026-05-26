@@ -7,6 +7,7 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import * as LocalAuthentication from "expo-local-authentication";
 
 import { AppProvider, useApp } from "./contexts/AppContext";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import LoginScreen from "./screens/LoginScreen";
 import HomeScreen from "./screens/HomeScreen";
 import ScanScreen from "./screens/ScanScreen";
@@ -20,6 +21,10 @@ import GoalsScreen from "./screens/GoalsScreen";
 import CustomCategoriesScreen from "./screens/CustomCategoriesScreen";
 import RecurringScreen from "./screens/RecurringScreen";
 import DebtScreen from "./screens/DebtScreen";
+import NetWorthScreen from "./screens/NetWorthScreen";
+import BillSplitScreen from "./screens/BillSplitScreen";
+import AchievementsScreen from "./screens/AchievementsScreen";
+import OnboardingScreen from "./screens/OnboardingScreen";
 
 axios.defaults.timeout = 30000;
 
@@ -73,7 +78,12 @@ const lockStyles = StyleSheet.create({
 function AppNavigator() {
   const { user, colors, isDark, t, biometricEnabled } = useApp();
   const [locked, setLocked] = useState(biometricEnabled);
+  const [onboardingDone, setOnboardingDone] = useState(null);
   const appState = useRef(AppState.currentState);
+
+  useEffect(() => {
+    AsyncStorage.getItem("onboarding_done").then((v) => setOnboardingDone(v === "true")).catch(() => setOnboardingDone(true));
+  }, []);
 
   // Lock when app goes to background
   useEffect(() => {
@@ -105,6 +115,17 @@ function AppNavigator() {
       <TouchableOpacity onPress={() => navigation.navigate("Settings")} style={{ marginRight: 4 }}>
         <Text style={{ fontSize: 22 }}>⚙️</Text>
       </TouchableOpacity>
+    );
+  }
+
+  if (onboardingDone === null) return null;
+
+  if (!onboardingDone) {
+    return (
+      <OnboardingScreen onDone={() => {
+        AsyncStorage.setItem("onboarding_done", "true").catch(() => {});
+        setOnboardingDone(true);
+      }} />
     );
   }
 
@@ -143,6 +164,9 @@ function AppNavigator() {
         <Stack.Screen name="CustomCategories" component={CustomCategoriesScreen} options={({ navigation }) => ({ title: t("customCatsTitle"), headerRight: () => settingsButton(navigation) })} />
         <Stack.Screen name="Recurring" component={RecurringScreen} options={({ navigation }) => ({ title: t("recurringTitle"), headerRight: () => settingsButton(navigation) })} />
         <Stack.Screen name="Debts" component={DebtScreen} options={({ navigation }) => ({ title: t("debtTitle"), headerRight: () => settingsButton(navigation) })} />
+        <Stack.Screen name="NetWorth" component={NetWorthScreen} options={({ navigation }) => ({ title: t("netWorthTitle"), headerRight: () => settingsButton(navigation) })} />
+        <Stack.Screen name="BillSplit" component={BillSplitScreen} options={({ navigation }) => ({ title: t("billSplitTitle"), headerRight: () => settingsButton(navigation) })} />
+        <Stack.Screen name="Achievements" component={AchievementsScreen} options={({ navigation }) => ({ title: t("achievementsTitle"), headerRight: () => settingsButton(navigation) })} />
         <Stack.Screen name="Settings" component={SettingsScreen} options={{ title: t("settings"), headerRight: () => null }} />
       </Stack.Navigator>
     </NavigationContainer>

@@ -3,6 +3,7 @@ import {
   View, Text, TouchableOpacity, ActivityIndicator,
   StyleSheet, ScrollView, Alert,
 } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as DocumentPicker from "expo-document-picker";
 import axios from "axios";
 import { API_BASE_URL } from "../config";
@@ -40,6 +41,7 @@ export default function ImportScreen({ navigation }) {
         headers: { "Content-Type": "multipart/form-data" },
       });
       setResult(res.data);
+      AsyncStorage.setItem("imported_once", "true").catch(() => {});
     } catch (err) {
       const msg = err?.response?.data?.detail || t("importFail");
       Alert.alert(t("importFail"), msg);
