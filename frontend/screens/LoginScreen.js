@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import {
   View, Text, TouchableOpacity, StyleSheet,
-  ActivityIndicator, Alert, Clipboard,
+  ActivityIndicator, Alert,
 } from "react-native";
 import * as WebBrowser from "expo-web-browser";
 import * as Google from "expo-auth-session/providers/google";
@@ -68,13 +68,7 @@ export default function LoginScreen() {
         `${t("googleNotReadyMsg")}\n\nRedirect URI ที่ต้องเพิ่มใน Google Console:\n\n${REDIRECT_URI}`,
         [
           { text: t("cancel"), style: "cancel" },
-          {
-            text: "Copy URI",
-            onPress: () => {
-              Clipboard.setString(REDIRECT_URI);
-              Alert.alert("Copied!", REDIRECT_URI);
-            },
-          },
+          { text: "OK" },
         ],
       );
       return;
