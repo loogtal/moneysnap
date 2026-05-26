@@ -30,12 +30,13 @@ function makeGuestId() {
 const AppContext = createContext({
   colors: LIGHT, isDark: false, themeMode: "auto",
   language: "th", user: null, notificationsEnabled: false,
-  biometricEnabled: false,
+  biometricEnabled: false, pinEnabled: false, pinCode: "",
   t: (k) => k,
   changeTheme: () => {}, changeLanguage: () => {},
   login: async () => {}, logout: async () => {},
   setNotificationsEnabled: async () => {},
   setBiometricEnabled: async () => {},
+  setPinEnabled: async () => {}, setPinCode: async () => {},
 });
 
 export function AppProvider({ children }) {
@@ -45,6 +46,8 @@ export function AppProvider({ children }) {
   const [user, setUser] = useState(null);
   const [notificationsEnabled, setNotifEnabled] = useState(false);
   const [biometricEnabled, setBiometricEnabledState] = useState(false);
+  const [pinEnabled, setPinEnabledState] = useState(false);
+  const [pinCode, setPinCodeState] = useState("");
   const [ready, setReady] = useState(false);
   const interceptorRef = useRef(null);
 
@@ -52,13 +55,15 @@ export function AppProvider({ children }) {
   useEffect(() => {
     (async () => {
       try {
-        const [tm, lang, u, token, notif, biometric] = await Promise.all([
+        const [tm, lang, u, token, notif, biometric, pinEn, pinCd] = await Promise.all([
           AsyncStorage.getItem("themeMode"),
           AsyncStorage.getItem("language"),
           AsyncStorage.getItem("user"),
           AsyncStorage.getItem("authToken"),
           AsyncStorage.getItem("notificationsEnabled"),
           AsyncStorage.getItem("biometricEnabled"),
+          AsyncStorage.getItem("pin_enabled"),
+          AsyncStorage.getItem("pin_code"),
         ]);
         if (tm) setThemeMode(tm);
         if (lang) setLanguage(lang);
@@ -68,6 +73,8 @@ export function AppProvider({ children }) {
         }
         if (notif === "true") setNotifEnabled(true);
         if (biometric === "true") setBiometricEnabledState(true);
+        if (pinEn === "true") setPinEnabledState(true);
+        if (pinCd) setPinCodeState(pinCd);
       } catch {}
       setReady(true);
     })();
@@ -169,6 +176,20 @@ export function AppProvider({ children }) {
     await AsyncStorage.setItem("biometricEnabled", String(enabled)).catch(() => {});
   }
 
+  async function setPinEnabled(enabled) {
+    setPinEnabledState(enabled);
+    await AsyncStorage.setItem("pin_enabled", String(enabled)).catch(() => {});
+  }
+
+  async function setPinCode(code) {
+    setPinCodeState(code);
+    if (code) {
+      await AsyncStorage.setItem("pin_code", code).catch(() => {});
+    } else {
+      await AsyncStorage.removeItem("pin_code").catch(() => {});
+    }
+  }
+
   async function logout() {
     await _clearSession();
   }
@@ -183,8 +204,10 @@ export function AppProvider({ children }) {
 
   return (
     <AppContext.Provider value={{
-      colors, isDark, themeMode, language, user, notificationsEnabled, biometricEnabled, t,
+      colors, isDark, themeMode, language, user, notificationsEnabled, biometricEnabled,
+      pinEnabled, pinCode, t,
       changeTheme, changeLanguage, login, logout, setNotificationsEnabled, setBiometricEnabled,
+      setPinEnabled, setPinCode,
     }}>
       {children}
     </AppContext.Provider>

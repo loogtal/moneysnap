@@ -25,6 +25,9 @@ import NetWorthScreen from "./screens/NetWorthScreen";
 import BillSplitScreen from "./screens/BillSplitScreen";
 import AchievementsScreen from "./screens/AchievementsScreen";
 import OnboardingScreen from "./screens/OnboardingScreen";
+import PinLockScreen from "./screens/PinLockScreen";
+import CalendarScreen from "./screens/CalendarScreen";
+import CurrencyScreen from "./screens/CurrencyScreen";
 
 axios.defaults.timeout = 30000;
 
@@ -76,8 +79,9 @@ const lockStyles = StyleSheet.create({
 });
 
 function AppNavigator() {
-  const { user, colors, isDark, t, biometricEnabled } = useApp();
+  const { user, colors, isDark, t, biometricEnabled, pinEnabled } = useApp();
   const [locked, setLocked] = useState(biometricEnabled);
+  const [pinLocked, setPinLocked] = useState(pinEnabled);
   const [onboardingDone, setOnboardingDone] = useState(null);
   const appState = useRef(AppState.currentState);
 
@@ -88,13 +92,14 @@ function AppNavigator() {
   // Lock when app goes to background
   useEffect(() => {
     const sub = AppState.addEventListener("change", (nextState) => {
-      if (biometricEnabled && appState.current === "active" && nextState !== "active") {
-        setLocked(true);
+      if (appState.current === "active" && nextState !== "active") {
+        if (biometricEnabled) setLocked(true);
+        if (pinEnabled && !biometricEnabled) setPinLocked(true);
       }
       appState.current = nextState;
     });
     return () => sub.remove();
-  }, [biometricEnabled]);
+  }, [biometricEnabled, pinEnabled]);
 
   const navTheme = {
     ...(isDark ? DarkTheme : DefaultTheme),
@@ -133,6 +138,10 @@ function AppNavigator() {
     return <BiometricLock onUnlock={() => setLocked(false)} colors={colors} t={t} />;
   }
 
+  if (pinEnabled && !biometricEnabled && pinLocked) {
+    return <PinLockScreen onUnlock={() => setPinLocked(false)} />;
+  }
+
   if (!user) {
     return (
       <NavigationContainer theme={navTheme}>
@@ -167,6 +176,8 @@ function AppNavigator() {
         <Stack.Screen name="NetWorth" component={NetWorthScreen} options={({ navigation }) => ({ title: t("netWorthTitle"), headerRight: () => settingsButton(navigation) })} />
         <Stack.Screen name="BillSplit" component={BillSplitScreen} options={({ navigation }) => ({ title: t("billSplitTitle"), headerRight: () => settingsButton(navigation) })} />
         <Stack.Screen name="Achievements" component={AchievementsScreen} options={({ navigation }) => ({ title: t("achievementsTitle"), headerRight: () => settingsButton(navigation) })} />
+        <Stack.Screen name="Calendar" component={CalendarScreen} options={({ navigation }) => ({ title: t("calendarTitle"), headerRight: () => settingsButton(navigation) })} />
+        <Stack.Screen name="Currency" component={CurrencyScreen} options={({ navigation }) => ({ title: t("currencyTitle"), headerRight: () => settingsButton(navigation) })} />
         <Stack.Screen name="Settings" component={SettingsScreen} options={{ title: t("settings"), headerRight: () => null }} />
       </Stack.Navigator>
     </NavigationContainer>

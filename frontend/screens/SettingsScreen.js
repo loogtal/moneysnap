@@ -1,10 +1,14 @@
 import React, { useEffect, useState } from "react";
 import {
   View, Text, TouchableOpacity, StyleSheet,
-  ScrollView, Alert, Image, ActivityIndicator, Switch,
+  ScrollView, Alert, Image, ActivityIndicator, Switch, Modal,
 } from "react-native";
 import axios from "axios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as LocalAuthentication from "expo-local-authentication";
+import * as FileSystem from "expo-file-system";
+import * as Sharing from "expo-sharing";
+import * as DocumentPicker from "expo-document-picker";
 import { API_BASE_URL } from "../config";
 import { useApp } from "../contexts/AppContext";
 import { requestPermission, scheduleWeeklyReminder, cancelWeeklyReminder } from "../services/notifications";
@@ -45,11 +49,22 @@ function Divider({ colors }) {
 }
 
 export default function SettingsScreen({ navigation }) {
-  const { colors, themeMode, language, user, t, changeTheme, changeLanguage, logout, notificationsEnabled, setNotificationsEnabled, biometricEnabled, setBiometricEnabled } = useApp();
+  const {
+    colors, themeMode, language, user, t, changeTheme, changeLanguage, logout,
+    notificationsEnabled, setNotificationsEnabled, biometricEnabled, setBiometricEnabled,
+    pinEnabled, setPinEnabled, setPinCode,
+  } = useApp();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [togglingNotif, setTogglingNotif] = useState(false);
   const [biometricSupported, setBiometricSupported] = useState(false);
+  const [pinStep, setPinStep] = useState(0);
+  const [pinInput, setPinInput] = useState("");
+  const [pinFirst, setPinFirst] = useState("");
+  const [backupLoading, setBackupLoading] = useState(false);
+  const [restoreLoading, setRestoreLoading] = useState(false);
+
+  const BACKUP_KEYS = ["savings_goals", "recurring_subs", "debts", "net_worth_items", "custom_categories"];
 
   useEffect(() => {
     LocalAuthentication.hasHardwareAsync().then((has) => {
@@ -91,6 +106,83 @@ export default function SettingsScreen({ navigation }) {
     }
   }
 
+  function handlePinKey(key) {
+    if (key === "⌫") { setPinInput((p) => p.slice(0, -1)); return; }
+    const next = pinInput + key;
+    setPinInput(next);
+    if (next.length === 4) {
+      if (pinStep === 1) {
+        setPinFirst(next);
+        setPinInput("");
+        setPinStep(2);
+      } else {
+        if (next === pinFirst) {
+          setPinEnabled(true);
+          setPinCode(next);
+          setPinStep(0); setPinInput(""); setPinFirst("");
+          Alert.alert("", t("pinSetupSuccess"));
+        } else {
+          setPinInput(""); setPinFirst("");
+          setPinStep(1);
+          Alert.alert("", t("pinMismatch"));
+        }
+      }
+    }
+  }
+
+  function handleDisablePin() {
+    Alert.alert(t("pinLock"), t("pinRemoveConfirm"), [
+      { text: t("cancel"), style: "cancel" },
+      { text: t("pinDisable"), style: "destructive", onPress: () => { setPinEnabled(false); setPinCode(""); } },
+    ]);
+  }
+
+  async function handleExportBackup() {
+    setBackupLoading(true);
+    try {
+      const entries = await Promise.all(BACKUP_KEYS.map(async (k) => {
+        const v = await AsyncStorage.getItem(k).catch(() => null);
+        return [k, v ? JSON.parse(v) : null];
+      }));
+      const data = Object.fromEntries(entries.filter(([, v]) => v !== null));
+      const json = JSON.stringify(data, null, 2);
+      const path = `${FileSystem.documentDirectory}moneysnap_backup.json`;
+      await FileSystem.writeAsStringAsync(path, json, { encoding: FileSystem.EncodingType.UTF8 });
+      await Sharing.shareAsync(path, { mimeType: "application/json", dialogTitle: t("backupExport") });
+    } catch {
+      Alert.alert(t("error"), t("backupFail"));
+    }
+    setBackupLoading(false);
+  }
+
+  async function handleImportBackup() {
+    try {
+      const picked = await DocumentPicker.getDocumentAsync({ type: ["application/json", "*/*"] });
+      if (picked.canceled) return;
+      const asset = picked.assets[0];
+      Alert.alert(t("backup"), t("backupConfirmImport"), [
+        { text: t("cancel"), style: "cancel" },
+        {
+          text: t("backupImport"),
+          onPress: async () => {
+            setRestoreLoading(true);
+            try {
+              const content = await FileSystem.readAsStringAsync(asset.uri, { encoding: FileSystem.EncodingType.UTF8 });
+              const data = JSON.parse(content);
+              await Promise.all(Object.entries(data).map(([k, v]) => AsyncStorage.setItem(k, JSON.stringify(v))));
+              Alert.alert("", t("backupSuccess"));
+            } catch {
+              Alert.alert(t("error"), t("backupFail"));
+            }
+            setRestoreLoading(false);
+          },
+        },
+      ]);
+    } catch {
+      Alert.alert(t("error"), t("backupFail"));
+    }
+  }
+
   function handleLogout() {
     Alert.alert(t("account"), t("signOutConfirm"), [
       { text: t("cancel"), style: "cancel" },
@@ -111,6 +203,7 @@ export default function SettingsScreen({ navigation }) {
     : null;
 
   return (
+    <>
     <ScrollView style={s.container} contentContainerStyle={s.content}>
 
       {/* Profile card */}
@@ -221,6 +314,56 @@ export default function SettingsScreen({ navigation }) {
         </TouchableOpacity>
       </Section>
 
+      {/* PIN Lock */}
+      <Section label={t("pinLock")} colors={colors}>
+        {pinEnabled ? (
+          <View style={{ gap: 12 }}>
+            <Text style={{ fontSize: 14, color: colors.text }}>{t("pinEnabled")}</Text>
+            <TouchableOpacity
+              style={{ paddingVertical: 10, borderRadius: 8, borderWidth: 1, borderColor: colors.danger, alignItems: "center" }}
+              onPress={handleDisablePin}
+            >
+              <Text style={{ color: colors.danger, fontWeight: "600" }}>{t("pinDisable")}</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <TouchableOpacity
+            style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}
+            onPress={() => { setPinStep(1); setPinInput(""); setPinFirst(""); }}
+          >
+            <Text style={{ fontSize: 14, color: colors.text }}>{t("pinEnable")}</Text>
+            <Text style={{ color: colors.subtext, fontSize: 16 }}>›</Text>
+          </TouchableOpacity>
+        )}
+      </Section>
+
+      {/* Backup & Restore */}
+      <Section label={t("backup")} colors={colors}>
+        <View style={{ gap: 12 }}>
+          <TouchableOpacity
+            style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}
+            onPress={handleExportBackup}
+            disabled={backupLoading}
+          >
+            <Text style={{ fontSize: 14, color: colors.text }}>{t("backupExport")}</Text>
+            {backupLoading
+              ? <ActivityIndicator size="small" color={colors.primary} />
+              : <Text style={{ color: colors.subtext, fontSize: 16 }}>›</Text>}
+          </TouchableOpacity>
+          <View style={{ height: 1, backgroundColor: colors.border }} />
+          <TouchableOpacity
+            style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}
+            onPress={handleImportBackup}
+            disabled={restoreLoading}
+          >
+            <Text style={{ fontSize: 14, color: colors.text }}>{t("backupImport")}</Text>
+            {restoreLoading
+              ? <ActivityIndicator size="small" color={colors.primary} />
+              : <Text style={{ color: colors.subtext, fontSize: 16 }}>›</Text>}
+          </TouchableOpacity>
+        </View>
+      </Section>
+
       {/* Theme */}
       <Section label={t("theme")} colors={colors}>
         <SegmentRow
@@ -236,6 +379,41 @@ export default function SettingsScreen({ navigation }) {
       </Section>
 
     </ScrollView>
+
+      {/* PIN Setup Modal */}
+      <Modal visible={pinStep > 0} transparent animationType="fade">
+        <View style={{ flex: 1, backgroundColor: "#00000088", justifyContent: "center", alignItems: "center" }}>
+          <View style={{ backgroundColor: colors.surface, borderRadius: 20, padding: 32, alignItems: "center", width: 300, borderWidth: 1, borderColor: colors.border }}>
+            <Text style={{ fontSize: 18, fontWeight: "700", color: colors.text, marginBottom: 6 }}>
+              {pinStep === 1 ? t("pinEnterNew") : t("pinConfirm")}
+            </Text>
+            <View style={{ flexDirection: "row", gap: 14, marginVertical: 22 }}>
+              {[0, 1, 2, 3].map((i) => (
+                <View key={i} style={{ width: 16, height: 16, borderRadius: 8, backgroundColor: pinInput.length > i ? colors.primary : colors.border }} />
+              ))}
+            </View>
+            {[["1","2","3"],["4","5","6"],["7","8","9"],["","0","⌫"]].map((row, ri) => (
+              <View key={ri} style={{ flexDirection: "row", gap: 12, marginBottom: 10 }}>
+                {row.map((key, ki) =>
+                  key === "" ? <View key={ki} style={{ width: 62, height: 46 }} /> : (
+                    <TouchableOpacity
+                      key={ki}
+                      style={{ width: 62, height: 46, borderRadius: 10, backgroundColor: key === "⌫" ? colors.chip : colors.bg, borderWidth: 1, borderColor: colors.border, alignItems: "center", justifyContent: "center" }}
+                      onPress={() => handlePinKey(key)}
+                    >
+                      <Text style={{ fontSize: 18, fontWeight: "600", color: colors.text }}>{key}</Text>
+                    </TouchableOpacity>
+                  )
+                )}
+              </View>
+            ))}
+            <TouchableOpacity onPress={() => { setPinStep(0); setPinInput(""); setPinFirst(""); }} style={{ marginTop: 8 }}>
+              <Text style={{ color: colors.subtext, fontSize: 14 }}>{t("cancel")}</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+    </>
   );
 }
 

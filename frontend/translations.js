@@ -193,6 +193,24 @@ export const TR = {
     achieveFirstDebt: "บันทึกหนี้แรก", achieveShared: "แชร์สรุป",
     achieveDarkMode: "เปิด Dark Mode", achieveBilingual: "เปลี่ยนภาษา",
     achieveSave10k: "ออมเงิน ฿10,000", achieveImport: "นำเข้า Statement",
+    // PIN Lock
+    pinLock: "PIN Lock", pinEnable: "เปิดใช้งาน PIN", pinDisable: "ปิดใช้งาน PIN",
+    pinEnabled: "PIN ถูกเปิดใช้งานแล้ว",
+    pinEnterNew: "ตั้ง PIN ใหม่ (4 หลัก)", pinConfirm: "ยืนยัน PIN อีกครั้ง",
+    pinEnter: "ใส่ PIN เพื่อเข้าใช้งาน",
+    pinMismatch: "PIN ไม่ตรงกัน กรุณาลองใหม่", pinWrong: "PIN ไม่ถูกต้อง กรุณาลองใหม่",
+    pinSetupSuccess: "ตั้ง PIN สำเร็จ!", pinRemoveConfirm: "ต้องการปิดใช้งาน PIN?",
+    // Calendar
+    calendar: "ปฏิทิน", calendarTitle: "ปฏิทินรายจ่าย", calendarNoTx: "ไม่มีธุรกรรมในวันนี้",
+    // Backup
+    backup: "สำรองข้อมูล", backupExport: "ส่งออกข้อมูล", backupImport: "นำเข้าข้อมูล",
+    backupSuccess: "กู้คืนข้อมูลสำเร็จ!", backupFail: "เกิดข้อผิดพลาด กรุณาลองใหม่",
+    backupConfirmImport: "ข้อมูลเดิมจะถูกแทนที่ด้วยข้อมูลในไฟล์ ต้องการดำเนินการ?",
+    // Currency
+    currency: "แลกเงิน", currencyTitle: "แปลงสกุลเงิน",
+    currencyFrom: "จากสกุลเงิน", currencyTo: "เป็นสกุลเงิน",
+    currencyAmount: "จำนวน", currencyUpdated: "อัปเดตล่าสุด",
+    currencyFail: "โหลดอัตราแลกเปลี่ยนไม่สำเร็จ",
     // Errors
     error: "ข้อผิดพลาด", loadFailed: "โหลดข้อมูลไม่สำเร็จ",
     saveFailed: "บันทึกไม่สำเร็จ โปรดลองอีกครั้ง",
@@ -396,6 +414,24 @@ export const TR = {
     achieveFirstDebt: "First Debt", achieveShared: "Shared Summary",
     achieveDarkMode: "Dark Mode On", achieveBilingual: "Changed Language",
     achieveSave10k: "Saved ฿10,000", achieveImport: "Imported Statement",
+    // PIN Lock
+    pinLock: "PIN Lock", pinEnable: "Enable PIN", pinDisable: "Disable PIN",
+    pinEnabled: "PIN lock is enabled",
+    pinEnterNew: "Set New PIN (4 digits)", pinConfirm: "Confirm PIN",
+    pinEnter: "Enter PIN to continue",
+    pinMismatch: "PINs do not match. Please try again.", pinWrong: "Incorrect PIN. Please try again.",
+    pinSetupSuccess: "PIN set successfully!", pinRemoveConfirm: "Disable PIN lock?",
+    // Calendar
+    calendar: "Calendar", calendarTitle: "Spending Calendar", calendarNoTx: "No transactions today",
+    // Backup
+    backup: "Backup", backupExport: "Export Data", backupImport: "Import Data",
+    backupSuccess: "Data restored successfully!", backupFail: "An error occurred. Please try again.",
+    backupConfirmImport: "Existing local data will be replaced. Continue?",
+    // Currency
+    currency: "Currency", currencyTitle: "Currency Converter",
+    currencyFrom: "From", currencyTo: "To",
+    currencyAmount: "Amount", currencyUpdated: "Rates updated",
+    currencyFail: "Failed to load exchange rates",
     // Errors
     error: "Error", loadFailed: "Failed to load data",
     saveFailed: "Save failed. Please try again",
