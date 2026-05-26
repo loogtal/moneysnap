@@ -234,6 +234,28 @@ export const TR = {
     currencyFrom: "จากสกุลเงิน", currencyTo: "เป็นสกุลเงิน",
     currencyAmount: "จำนวน", currencyUpdated: "อัปเดตล่าสุด",
     currencyFail: "โหลดอัตราแลกเปลี่ยนไม่สำเร็จ",
+    // Export CSV (TransactionsScreen)
+    exportCSVSuccess: "ไฟล์ CSV พร้อมแชร์", exportCSVFail: "ส่งออก CSV ไม่สำเร็จ",
+    // Merchant Analytics
+    merchants: "ร้านค้า", merchantTitle: "วิเคราะห์ร้านค้า",
+    merchantEmpty: "ไม่มีข้อมูลรายจ่าย", merchantTimes: "ครั้ง",
+    // Financial Health
+    health: "สุขภาพการเงิน", healthTitle: "คะแนนสุขภาพการเงิน",
+    healthScore: "คะแนนของคุณ", healthSavings: "อัตราออม",
+    healthBudget: "ปฏิบัติตามงบ", healthGoals: "ความคืบหน้าเป้าหมาย",
+    healthTipGreat: "ยอดเยี่ยม! คุณจัดการเงินได้ดีมาก 🎉",
+    healthTipGood: "ดีมาก! ลองออมเพิ่มอีกหน่อยเพื่อให้ดียิ่งขึ้น",
+    healthTipFair: "ระวังการใช้จ่าย — คุณใกล้เต็มงบแล้ว",
+    healthTipPoor: "รายจ่ายเกินรายรับ ตรวจสอบงบประมาณของคุณ",
+    healthNoData: "ยังไม่มีข้อมูลเพียงพอในเดือนนี้",
+    // Forecast (new detailed version)
+    forecast: "พยากรณ์", forecastScreenTitle: "พยากรณ์การใช้จ่าย",
+    forecastDailyAvg: "เฉลี่ยต่อวัน", forecastThisMonth: "ใช้ไปเดือนนี้",
+    forecastIncome: "รายรับเดือนนี้", forecastSurplus: "คาดว่าจะเหลือ",
+    forecastDeficit: "คาดว่าจะขาด", forecastOnTrack: "ดี! การใช้จ่ายอยู่ในเกณฑ์",
+    forecastOverBudget: "ระวัง! คาดว่าจะเกินรายรับ",
+    forecastNoData: "ยังไม่มีธุรกรรมเดือนนี้",
+    forecastDayOf: "จาก",
     // Errors
     error: "ข้อผิดพลาด", loadFailed: "โหลดข้อมูลไม่สำเร็จ",
     saveFailed: "บันทึกไม่สำเร็จ โปรดลองอีกครั้ง",
@@ -478,6 +500,28 @@ export const TR = {
     currencyFrom: "From", currencyTo: "To",
     currencyAmount: "Amount", currencyUpdated: "Rates updated",
     currencyFail: "Failed to load exchange rates",
+    // Export CSV (TransactionsScreen)
+    exportCSVSuccess: "CSV file ready to share", exportCSVFail: "CSV export failed",
+    // Merchant Analytics
+    merchants: "Merchants", merchantTitle: "Merchant Analytics",
+    merchantEmpty: "No expense data", merchantTimes: "times",
+    // Financial Health
+    health: "Health Score", healthTitle: "Financial Health Score",
+    healthScore: "Your Score", healthSavings: "Savings Rate",
+    healthBudget: "Budget Adherence", healthGoals: "Goals Progress",
+    healthTipGreat: "Excellent! You're managing money really well 🎉",
+    healthTipGood: "Good job! Try to save a little more.",
+    healthTipFair: "Watch your spending — you're close to your limits.",
+    healthTipPoor: "Expenses exceed income. Review your budget.",
+    healthNoData: "Not enough data this month yet",
+    // Forecast (new detailed version)
+    forecast: "Forecast", forecastScreenTitle: "Spending Forecast",
+    forecastDailyAvg: "Daily Average", forecastThisMonth: "Spent This Month",
+    forecastIncome: "Monthly Income", forecastSurplus: "Projected Surplus",
+    forecastDeficit: "Projected Deficit", forecastOnTrack: "On track! Spending is within income.",
+    forecastOverBudget: "Warning! Projected to exceed monthly income.",
+    forecastNoData: "No transactions this month yet",
+    forecastDayOf: "of",
     // Errors
     error: "Error", loadFailed: "Failed to load data",
     saveFailed: "Save failed. Please try again",

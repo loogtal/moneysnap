@@ -7,6 +7,8 @@ import {
 import { Swipeable } from "react-native-gesture-handler";
 import { useFocusEffect } from "@react-navigation/native";
 import axios from "axios";
+import * as FileSystem from "expo-file-system";
+import * as Sharing from "expo-sharing";
 import { API_BASE_URL } from "../config";
 import CategoryBadge from "../components/CategoryBadge";
 import { useApp } from "../contexts/AppContext";
@@ -64,6 +66,38 @@ export default function TransactionsScreen({ navigation }) {
     const next = filterTag === tag ? null : tag;
     setFilterTag(next);
     load(search, filterMonth, next);
+  }
+
+  async function exportCSV() {
+    try {
+      const header = "Date,Type,Category,Amount,Sender,Receiver,Bank,Tags";
+      const rows = transactions.map((tx) => {
+        const tags = (tx.tags || []).join(";");
+        const esc = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+        return [
+          esc(tx.transaction_date?.slice(0, 10) ?? ""),
+          esc(tx.transaction_type ?? ""),
+          esc(tx.category ?? ""),
+          tx.amount?.toFixed(2) ?? "0.00",
+          esc(tx.sender_name ?? ""),
+          esc(tx.receiver_name ?? ""),
+          esc(tx.bank_name ?? ""),
+          esc(tags),
+        ].join(",");
+      });
+      const csv = [header, ...rows].join("\n");
+      const month = filterMonth ? `_${currentYear}-${filterMonth}` : "";
+      const path = `${FileSystem.documentDirectory}transactions${month}.csv`;
+      await FileSystem.writeAsStringAsync(path, csv, { encoding: FileSystem.EncodingType.UTF8 });
+      const canShare = await Sharing.isAvailableAsync();
+      if (canShare) {
+        await Sharing.shareAsync(path, { mimeType: "text/csv", dialogTitle: t("exportCSV") });
+      } else {
+        Alert.alert(t("exportCSV"), t("exportCSVSuccess"));
+      }
+    } catch {
+      Alert.alert(t("error"), t("exportCSVFail"));
+    }
   }
 
   async function deleteItem(item) {
@@ -154,6 +188,12 @@ export default function TransactionsScreen({ navigation }) {
         );
       })()}
 
+      {transactions.length > 0 && (
+        <TouchableOpacity style={s.exportBtn} onPress={exportCSV}>
+          <Text style={s.exportBtnText}>📤 {t("exportCSV")} ({transactions.length})</Text>
+        </TouchableOpacity>
+      )}
+
       {transactions.length === 0 ? (
         <Text style={s.empty}>{search || filterMonth ? t("noSearchResult") : t("noData")}</Text>
       ) : (
@@ -232,4 +272,10 @@ const styles = (c) => StyleSheet.create({
     width: 80, borderRadius: 12, marginBottom: 10,
   },
   swipeDeleteText: { color: "#fff", fontWeight: "700", fontSize: 14 },
+  exportBtn: {
+    flexDirection: "row", justifyContent: "center", alignItems: "center",
+    backgroundColor: c.surface, borderRadius: 8, paddingVertical: 7,
+    borderWidth: 1, borderColor: c.border, marginBottom: 8,
+  },
+  exportBtnText: { fontSize: 13, color: c.primary, fontWeight: "600" },
 });
