@@ -7,6 +7,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import axios from "axios";
 import { API_BASE_URL } from "../config";
 import { useApp } from "../contexts/AppContext";
+import { sendScanSuccess } from "../services/notifications";
 
 const CAT_ICONS = {
   food: "🍔", shopping: "🛍️", transport: "🚗",
@@ -27,7 +28,7 @@ function ProgressBar({ percent, colors }) {
 }
 
 export default function BudgetScreen() {
-  const { colors, t } = useApp();
+  const { colors, t, notificationsEnabled } = useApp();
   const [budgets, setBudgets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(null);
@@ -39,11 +40,25 @@ export default function BudgetScreen() {
   async function loadBudgets() {
     try {
       const res = await axios.get(`${API_BASE_URL}/budgets`);
-      setBudgets(res.data.budgets || []);
+      const data = res.data.budgets || [];
+      setBudgets(data);
+      if (notificationsEnabled) checkBudgetAlerts(data);
     } catch {
       Alert.alert(t("error"), t("loadFailed"));
     } finally {
       setLoading(false);
+    }
+  }
+
+  function checkBudgetAlerts(data) {
+    const overBudget = data.filter((b) => b.budget && b.percent >= 100);
+    const nearBudget = data.filter((b) => b.budget && b.percent >= 80 && b.percent < 100);
+    if (overBudget.length > 0) {
+      const cats = overBudget.map((b) => t(`cat${b.category.charAt(0).toUpperCase()}${b.category.slice(1)}`)).join(", ");
+      sendScanSuccess("⚠️ เกินงบประมาณ!", `${cats} — ใช้เกินงบแล้ว`);
+    } else if (nearBudget.length > 0) {
+      const cats = nearBudget.map((b) => t(`cat${b.category.charAt(0).toUpperCase()}${b.category.slice(1)}`)).join(", ");
+      sendScanSuccess("💰 " + t("budgetWarning"), cats);
     }
   }
 

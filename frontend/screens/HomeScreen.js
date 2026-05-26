@@ -55,6 +55,9 @@ export default function HomeScreen({ navigation }) {
   }
 
   const thisMonth = summary.filter((item) => item.month === new Date().toISOString().slice(0, 7));
+  const monthIncome = thisMonth.filter((r) => r.transaction_type === "income").reduce((s, r) => s + Number(r.total), 0);
+  const monthExpense = thisMonth.filter((r) => r.transaction_type !== "income").reduce((s, r) => s + Number(r.total), 0);
+  const monthNet = monthIncome - monthExpense;
   const s = styles(colors);
 
   const firstName = user?.name?.split(" ")[0] ?? "";
@@ -79,6 +82,28 @@ export default function HomeScreen({ navigation }) {
           />
         </TouchableOpacity>
       </View>
+
+      {/* Monthly summary card */}
+      {!loading && (monthIncome > 0 || monthExpense > 0) && (
+        <View style={s.summaryCard}>
+          <View style={s.summaryItem}>
+            <Text style={s.summaryLabel}>{t("income")}</Text>
+            <Text style={[s.summaryValue, { color: colors.success }]}>฿{monthIncome.toFixed(0)}</Text>
+          </View>
+          <View style={s.summaryDivider} />
+          <View style={s.summaryItem}>
+            <Text style={s.summaryLabel}>{t("expense")}</Text>
+            <Text style={[s.summaryValue, { color: colors.danger }]}>฿{monthExpense.toFixed(0)}</Text>
+          </View>
+          <View style={s.summaryDivider} />
+          <View style={s.summaryItem}>
+            <Text style={s.summaryLabel}>{t("net")}</Text>
+            <Text style={[s.summaryValue, { color: monthNet >= 0 ? colors.success : colors.danger }]}>
+              {monthNet >= 0 ? "+" : ""}฿{monthNet.toFixed(0)}
+            </Text>
+          </View>
+        </View>
+      )}
 
       <View style={s.grid}>
         {[
@@ -135,4 +160,12 @@ const styles = (c) => StyleSheet.create({
   gridLabel: { fontSize: 12, fontWeight: "600", color: c.text, textAlign: "center" },
   loader: { marginTop: 40 },
   empty: { color: c.subtext, fontSize: 15, marginTop: 12 },
+  summaryCard: {
+    flexDirection: "row", backgroundColor: c.surface, borderRadius: 14,
+    borderWidth: 1, borderColor: c.border, marginBottom: 16, padding: 14,
+  },
+  summaryItem: { flex: 1, alignItems: "center" },
+  summaryLabel: { fontSize: 11, color: c.subtext, marginBottom: 4 },
+  summaryValue: { fontSize: 16, fontWeight: "800" },
+  summaryDivider: { width: 1, backgroundColor: c.border, marginVertical: 4 },
 });

@@ -4,6 +4,7 @@ import {
   TouchableOpacity, Alert, RefreshControl, TextInput,
   ScrollView,
 } from "react-native";
+import { Swipeable } from "react-native-gesture-handler";
 import { useFocusEffect } from "@react-navigation/native";
 import axios from "axios";
 import { API_BASE_URL } from "../config";
@@ -57,21 +58,28 @@ export default function TransactionsScreen({ navigation }) {
     load(search, next);
   }
 
+  async function deleteItem(item) {
+    try {
+      await axios.delete(`${API_BASE_URL}/transactions/${item.id}`);
+      setTransactions((p) => p.filter((x) => x.id !== item.id));
+    } catch {
+      Alert.alert(t("error"), t("deleteFailed"));
+    }
+  }
+
   function confirmDelete(item) {
     Alert.alert(t("deleteTitle"), `฿${item.amount?.toFixed(2)}`, [
       { text: t("cancel"), style: "cancel" },
-      {
-        text: t("delete"), style: "destructive",
-        onPress: async () => {
-          try {
-            await axios.delete(`${API_BASE_URL}/transactions/${item.id}`);
-            setTransactions((p) => p.filter((x) => x.id !== item.id));
-          } catch {
-            Alert.alert(t("error"), t("deleteFailed"));
-          }
-        },
-      },
+      { text: t("delete"), style: "destructive", onPress: () => deleteItem(item) },
     ]);
+  }
+
+  function renderRightActions(item) {
+    return (
+      <TouchableOpacity style={s.swipeDeleteBtn} onPress={() => confirmDelete(item)}>
+        <Text style={s.swipeDeleteText}>{t("delete")}</Text>
+      </TouchableOpacity>
+    );
   }
 
   const s = styles(colors);
@@ -124,27 +132,24 @@ export default function TransactionsScreen({ navigation }) {
           keyExtractor={(item) => String(item.id)}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} />}
           renderItem={({ item }) => (
-            <View style={s.card}>
-              <View style={s.topRow}>
-                <Text style={s.name} numberOfLines={1}>{item.receiver_name || t("unknownTx")}</Text>
-                <Text style={[s.amount, item.transaction_type === "income" && { color: colors.success }]}>
-                  {item.transaction_type === "income" ? "+" : "-"}฿{item.amount?.toFixed(2) ?? "0.00"}
-                </Text>
-              </View>
-              <Text style={s.bank}>{item.bank_name || t("unspecified")}</Text>
-              <View style={s.meta}>
-                <Text style={s.date}>{item.transaction_date?.slice(0, 10) || t("noDate")}</Text>
-                <CategoryBadge category={item.category || "other"} />
-              </View>
-              <View style={s.actions}>
-                <TouchableOpacity onPress={() => navigation.navigate("EditTransaction", { transactionId: item.id })}>
+            <Swipeable renderRightActions={() => renderRightActions(item)} overshootRight={false}>
+              <View style={s.card}>
+                <View style={s.topRow}>
+                  <Text style={s.name} numberOfLines={1}>{item.receiver_name || t("unknownTx")}</Text>
+                  <Text style={[s.amount, item.transaction_type === "income" && { color: colors.success }]}>
+                    {item.transaction_type === "income" ? "+" : "-"}฿{item.amount?.toFixed(2) ?? "0.00"}
+                  </Text>
+                </View>
+                <Text style={s.bank}>{item.bank_name || t("unspecified")}</Text>
+                <View style={s.meta}>
+                  <Text style={s.date}>{item.transaction_date?.slice(0, 10) || t("noDate")}</Text>
+                  <CategoryBadge category={item.category || "other"} />
+                </View>
+                <TouchableOpacity style={s.editRow} onPress={() => navigation.navigate("EditTransaction", { transactionId: item.id })}>
                   <Text style={s.editText}>{t("edit")}</Text>
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => confirmDelete(item)}>
-                  <Text style={s.deleteText}>{t("delete")}</Text>
-                </TouchableOpacity>
               </View>
-            </View>
+            </Swipeable>
           )}
         />
       )}
@@ -181,7 +186,11 @@ const styles = (c) => StyleSheet.create({
   bank: { color: c.subtext, fontSize: 13, marginBottom: 8 },
   meta: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   date: { color: c.subtext, fontSize: 13 },
-  actions: { flexDirection: "row", justifyContent: "flex-end", gap: 20, marginTop: 10, borderTopWidth: 1, borderTopColor: c.border, paddingTop: 8 },
+  editRow: { marginTop: 10, borderTopWidth: 1, borderTopColor: c.border, paddingTop: 8, alignSelf: "flex-end" },
   editText: { color: c.primary, fontWeight: "600", fontSize: 14 },
-  deleteText: { color: c.danger, fontWeight: "600", fontSize: 14 },
+  swipeDeleteBtn: {
+    backgroundColor: c.danger, justifyContent: "center", alignItems: "center",
+    width: 80, borderRadius: 12, marginBottom: 10,
+  },
+  swipeDeleteText: { color: "#fff", fontWeight: "700", fontSize: 14 },
 });
