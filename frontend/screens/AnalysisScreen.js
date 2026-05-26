@@ -117,12 +117,15 @@ export default function AnalysisScreen({ navigation }) {
   async function refresh() {
     setLoadingChart(true);
     setLoadingTips(true);
+    setLoadingWeekly(true);
     setSummary([]);
     setTips("");
+    setWeeklyData(null);
     const month = new Date().toISOString().slice(0, 7);
     await axios.delete(`${API_BASE_URL}/analysis/ai-tips/${month}`).catch(() => {});
     loadChart();
     loadTips();
+    loadWeekly();
   }
 
   const currentMonth = new Date().toISOString().slice(0, 7);
@@ -176,36 +179,36 @@ export default function AnalysisScreen({ navigation }) {
             <View style={[s.dot, { backgroundColor: colors.danger, marginLeft: 12 }]} />
             <Text style={s.legendText}>{t("expense")}</Text>
           </View>
+
+          {/* Weekly Summary */}
+          <Text style={s.sectionTitle}>{t("weeklyTitle")}</Text>
+          {loadingWeekly ? (
+            <View style={[s.trendCard, { justifyContent: "center", alignItems: "center" }]}>
+              <ActivityIndicator size="small" color={colors.primary} />
+            </View>
+          ) : weeklyData ? (
+            <View style={s.weeklyCard}>
+              <View style={s.weeklyCol}>
+                <Text style={s.weeklyHeader}>{t("currentWeek")}</Text>
+                <Text style={[s.weeklyVal, { color: colors.success }]}>+฿{weeklyData.current.income.toFixed(0)}</Text>
+                <Text style={[s.weeklyVal, { color: colors.danger }]}>-฿{weeklyData.current.expense.toFixed(0)}</Text>
+                <Text style={[s.weeklyNet, { color: weeklyData.current.net >= 0 ? colors.success : colors.danger }]}>
+                  {weeklyData.current.net >= 0 ? "+" : ""}฿{weeklyData.current.net.toFixed(0)}
+                </Text>
+              </View>
+              <View style={s.weeklyDivider} />
+              <View style={s.weeklyCol}>
+                <Text style={s.weeklyHeader}>{t("prevWeek")}</Text>
+                <Text style={[s.weeklyVal, { color: colors.success }]}>+฿{weeklyData.prev.income.toFixed(0)}</Text>
+                <Text style={[s.weeklyVal, { color: colors.danger }]}>-฿{weeklyData.prev.expense.toFixed(0)}</Text>
+                <Text style={[s.weeklyNet, { color: weeklyData.prev.net >= 0 ? colors.success : colors.danger }]}>
+                  {weeklyData.prev.net >= 0 ? "+" : ""}฿{weeklyData.prev.net.toFixed(0)}
+                </Text>
+              </View>
+            </View>
+          ) : null}
         </>
       )}
-
-      {/* Weekly Summary */}
-      <Text style={s.sectionTitle}>{t("weeklyTitle")}</Text>
-      {loadingWeekly ? (
-        <View style={[s.trendCard, { justifyContent: "center", alignItems: "center" }]}>
-          <ActivityIndicator size="small" color={colors.primary} />
-        </View>
-      ) : weeklyData ? (
-        <View style={s.weeklyCard}>
-          <View style={s.weeklyCol}>
-            <Text style={s.weeklyHeader}>{t("currentWeek")}</Text>
-            <Text style={[s.weeklyVal, { color: colors.success }]}>+฿{weeklyData.current.income.toFixed(0)}</Text>
-            <Text style={[s.weeklyVal, { color: colors.danger }]}>-฿{weeklyData.current.expense.toFixed(0)}</Text>
-            <Text style={[s.weeklyNet, { color: weeklyData.current.net >= 0 ? colors.success : colors.danger }]}>
-              {weeklyData.current.net >= 0 ? "+" : ""}฿{weeklyData.current.net.toFixed(0)}
-            </Text>
-          </View>
-          <View style={s.weeklyDivider} />
-          <View style={s.weeklyCol}>
-            <Text style={s.weeklyHeader}>{t("prevWeek")}</Text>
-            <Text style={[s.weeklyVal, { color: colors.success }]}>+฿{weeklyData.prev.income.toFixed(0)}</Text>
-            <Text style={[s.weeklyVal, { color: colors.danger }]}>-฿{weeklyData.prev.expense.toFixed(0)}</Text>
-            <Text style={[s.weeklyNet, { color: weeklyData.prev.net >= 0 ? colors.success : colors.danger }]}>
-              {weeklyData.prev.net >= 0 ? "+" : ""}฿{weeklyData.prev.net.toFixed(0)}
-            </Text>
-          </View>
-        </View>
-      ) : null}
 
       {loadingTips ? (
         <View style={s.tipsRow}>

@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from "react";
 import {
   View, Text, ScrollView, TextInput, TouchableOpacity,
-  ActivityIndicator, Alert, StyleSheet, Modal,
+  Alert, StyleSheet, Modal,
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
