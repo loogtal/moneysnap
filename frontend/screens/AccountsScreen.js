@@ -32,8 +32,18 @@ export default function AccountsScreen() {
     try {
       const cached = await AsyncStorage.getItem(CURRENCY_CACHE_KEY).catch(() => null);
       if (cached) {
-        const { rates: r } = JSON.parse(cached);
-        setRates(r);
+        const parsed = JSON.parse(cached);
+        const age = Date.now() - (parsed.ts || 0);
+        if (parsed.rates && age < 24 * 60 * 60 * 1000) {
+          setRates(parsed.rates);
+          return;
+        }
+      }
+      const res = await fetch("https://open.er-api.com/v6/latest/USD", { signal: AbortSignal.timeout(8000) });
+      const json = await res.json();
+      if (json.result === "success" && json.rates) {
+        setRates(json.rates);
+        await AsyncStorage.setItem(CURRENCY_CACHE_KEY, JSON.stringify({ rates: json.rates, ts: Date.now() })).catch(() => {});
       }
     } catch {}
   }

@@ -160,9 +160,7 @@ export function AppProvider({ children }) {
       };
       setUser(merged);
       await AsyncStorage.setItem("user", JSON.stringify(merged)).catch(() => {});
-    } catch (err) {
-      // Backend unreachable — store locally so user isn't blocked
-      console.warn("Backend auth failed, continuing offline:", err?.message);
+    } catch {
       const localUser = { ...userData, id: providerId, provider_id: providerId };
       setUser(localUser);
       await AsyncStorage.setItem("user", JSON.stringify(localUser)).catch(() => {});

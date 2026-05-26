@@ -170,6 +170,7 @@ export const TR = {
     deleteDebtConfirm: "ต้องการลบรายการนี้?",
     totalLent: "รวมให้ยืม (คงค้าง)",
     totalBorrowed: "รวมยืม (คงค้าง)",
+    debtRemaining: "คงเหลือ",
     // Forecast
     forecastTitle: "ประมาณการณ์สิ้นเดือน",
     forecastBased: "อ้างอิงจากค่าเฉลี่ย 3 เดือนก่อน",
@@ -177,24 +178,6 @@ export const TR = {
     forecastDaysLeft: "วันที่เหลือในเดือน",
     // Share
     shareSummary: "แชร์สรุปเดือน",
-    // Net Worth
-    netWorth: "ทรัพย์สินสุทธิ", netWorthTitle: "Net Worth", netWorthSubtitle: "สินทรัพย์ลบหนี้สิน",
-    assets: "สินทรัพย์", liabilities: "หนี้สิน", add: "เพิ่ม", type: "ประเภท",
-    nwEmptyAssets: "ยังไม่มีสินทรัพย์", nwEmptyLiab: "ยังไม่มีหนี้สิน",
-    // Bill Split
-    billSplit: "หารบิล", billSplitTitle: "หารค่าใช้จ่าย", billSplitSubtitle: "คำนวณค่าใช้จ่ายต่อคน",
-    totalBill: "ยอดรวม", tipPercent: "ทิป", tip: "ทิป", numPeople: "จำนวนคน",
-    perPerson: "แยกรายคน (กำหนดเองได้)", person: "คนที่",
-    grandTotal: "ยอดรวมทั้งหมด", people: "คน", avgPerPerson: "เฉลี่ยต่อคน",
-    // Achievements
-    achievements: "ความสำเร็จ", achievementsTitle: "ความสำเร็จ", achievementsSubtitle: "สะสม badge จากการใช้แอป",
-    achieved: "สำเร็จแล้ว",
-    achieveFirstScan: "สแกนสลิปแรก", achieveTenScans: "สแกน 10 ครั้ง",
-    achieveFirstBudget: "ตั้งงบแรก", achieveFirstGoal: "ตั้งเป้าหมายแรก",
-    achieveGoalDone: "สำเร็จเป้าหมาย", achieveFirstRecur: "บันทึกรายจ่ายประจำ",
-    achieveFirstDebt: "บันทึกหนี้แรก", achieveShared: "แชร์สรุป",
-    achieveDarkMode: "เปิด Dark Mode", achieveBilingual: "เปลี่ยนภาษา",
-    achieveSave10k: "ออมเงิน ฿10,000", achieveImport: "นำเข้า Statement",
     // Tags
     tagsLabel: "แท็ก", addTag: "เพิ่มแท็ก", tagHint: "เช่น vacation, work",
     noTags: "ยังไม่มีแท็ก", filterByTag: "กรองตามแท็ก",
@@ -231,10 +214,7 @@ export const TR = {
     backup: "สำรองข้อมูล", backupExport: "ส่งออกข้อมูล", backupImport: "นำเข้าข้อมูล",
     backupSuccess: "กู้คืนข้อมูลสำเร็จ!", backupFail: "เกิดข้อผิดพลาด กรุณาลองใหม่",
     backupConfirmImport: "ข้อมูลเดิมจะถูกแทนที่ด้วยข้อมูลในไฟล์ ต้องการดำเนินการ?",
-    // Currency
-    currency: "แลกเงิน", currencyTitle: "แปลงสกุลเงิน",
-    currencyFrom: "จากสกุลเงิน", currencyTo: "เป็นสกุลเงิน",
-    currencyAmount: "จำนวน", currencyUpdated: "อัปเดตล่าสุด",
+    currencyFrom: "สกุลเงิน",
     currencyFail: "โหลดอัตราแลกเปลี่ยนไม่สำเร็จ",
     // Quick Add
     quickAdd: "เพิ่มรายการ", quickAddTitle: "เพิ่มรายการด่วน",
@@ -452,6 +432,7 @@ export const TR = {
     deleteDebtConfirm: "Delete this entry?",
     totalLent: "Outstanding Lent",
     totalBorrowed: "Outstanding Borrowed",
+    debtRemaining: "Remaining",
     // Forecast
     forecastTitle: "End-of-Month Forecast",
     forecastBased: "Based on 3-month average",
@@ -459,24 +440,6 @@ export const TR = {
     forecastDaysLeft: "Days remaining",
     // Share
     shareSummary: "Share Summary",
-    // Net Worth
-    netWorth: "Net Worth", netWorthTitle: "Net Worth", netWorthSubtitle: "Assets minus liabilities",
-    assets: "Assets", liabilities: "Liabilities", add: "Add", type: "Type",
-    nwEmptyAssets: "No assets yet", nwEmptyLiab: "No liabilities yet",
-    // Bill Split
-    billSplit: "Bill Split", billSplitTitle: "Split Bill", billSplitSubtitle: "Calculate cost per person",
-    totalBill: "Total Bill", tipPercent: "Tip", tip: "Tip", numPeople: "Number of People",
-    perPerson: "Per Person (custom amounts)", person: "Person",
-    grandTotal: "Grand Total", people: "people", avgPerPerson: "avg per person",
-    // Achievements
-    achievements: "Achievements", achievementsTitle: "Achievements", achievementsSubtitle: "Earn badges as you use the app",
-    achieved: "achieved",
-    achieveFirstScan: "First Scan", achieveTenScans: "10 Scans",
-    achieveFirstBudget: "Set First Budget", achieveFirstGoal: "First Goal",
-    achieveGoalDone: "Goal Achieved", achieveFirstRecur: "First Recurring",
-    achieveFirstDebt: "First Debt", achieveShared: "Shared Summary",
-    achieveDarkMode: "Dark Mode On", achieveBilingual: "Changed Language",
-    achieveSave10k: "Saved ฿10,000", achieveImport: "Imported Statement",
     // Tags
     tagsLabel: "Tags", addTag: "Add Tag", tagHint: "e.g. vacation, work",
     noTags: "No tags yet", filterByTag: "Filter by tag",
@@ -513,10 +476,7 @@ export const TR = {
     backup: "Backup", backupExport: "Export Data", backupImport: "Import Data",
     backupSuccess: "Data restored successfully!", backupFail: "An error occurred. Please try again.",
     backupConfirmImport: "Existing local data will be replaced. Continue?",
-    // Currency
-    currency: "Currency", currencyTitle: "Currency Converter",
-    currencyFrom: "From", currencyTo: "To",
-    currencyAmount: "Amount", currencyUpdated: "Rates updated",
+    currencyFrom: "Currency",
     currencyFail: "Failed to load exchange rates",
     // Quick Add
     quickAdd: "Add Entry", quickAddTitle: "Quick Add Transaction",

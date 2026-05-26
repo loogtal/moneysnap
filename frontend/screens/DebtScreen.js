@@ -141,7 +141,7 @@ export default function DebtScreen() {
                   <Text style={[s.debtAmount, { color: done ? colors.success : (tab === "lent" ? colors.success : colors.danger) }]}>
                     ฿{debt.amount.toFixed(0)}
                   </Text>
-                  {!done && <Text style={{ fontSize: 11, color: colors.subtext }}>คงเหลือ ฿{remaining.toFixed(0)}</Text>}
+                  {!done && <Text style={{ fontSize: 11, color: colors.subtext }}>{t("debtRemaining")} ฿{remaining.toFixed(0)}</Text>}
                   {done && <Text style={{ fontSize: 11, color: colors.success, fontWeight: "700" }}>{t("debtPaid")}</Text>}
                 </View>
               </View>
