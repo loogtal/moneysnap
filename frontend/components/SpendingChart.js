@@ -21,7 +21,7 @@ export default function SpendingChart({ data = [] }) {
 
   const total = chartData.reduce((sum, item) => sum + item.y, 0);
 
-  const catLabel = (key) => t(CAT_KEY[key] || "catOther");
+  const catLabel = (key) => t(CAT_KEY[key]) || key || t("catOther");
 
   if (chartData.length === 0) {
     return (

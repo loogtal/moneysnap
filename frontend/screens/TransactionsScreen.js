@@ -7,16 +7,15 @@ import {
 import { Swipeable } from "react-native-gesture-handler";
 import { useFocusEffect } from "@react-navigation/native";
 import axios from "axios";
-import * as FileSystem from "expo-file-system";
-import * as Sharing from "expo-sharing";
 import { API_BASE_URL } from "../config";
 import CategoryBadge from "../components/CategoryBadge";
 import { useApp } from "../contexts/AppContext";
+import { exportTransactionsCSV } from "../services/csvExport";
 
 const MONTHS = ["01","02","03","04","05","06","07","08","09","10","11","12"];
 
 export default function TransactionsScreen({ navigation }) {
-  const { colors, t, privacyMode } = useApp();
+  const { colors, t, privacyMode, language } = useApp();
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -70,31 +69,8 @@ export default function TransactionsScreen({ navigation }) {
 
   async function exportCSV() {
     try {
-      const header = "Date,Type,Category,Amount,Sender,Receiver,Bank,Tags";
-      const rows = transactions.map((tx) => {
-        const tags = (tx.tags || []).join(";");
-        const esc = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
-        return [
-          esc(tx.transaction_date?.slice(0, 10) ?? ""),
-          esc(tx.transaction_type ?? ""),
-          esc(tx.category ?? ""),
-          tx.amount?.toFixed(2) ?? "0.00",
-          esc(tx.sender_name ?? ""),
-          esc(tx.receiver_name ?? ""),
-          esc(tx.bank_name ?? ""),
-          esc(tags),
-        ].join(",");
-      });
-      const csv = [header, ...rows].join("\n");
-      const month = filterMonth ? `_${currentYear}-${filterMonth}` : "";
-      const path = `${FileSystem.documentDirectory}transactions${month}.csv`;
-      await FileSystem.writeAsStringAsync(path, csv, { encoding: FileSystem.EncodingType.UTF8 });
-      const canShare = await Sharing.isAvailableAsync();
-      if (canShare) {
-        await Sharing.shareAsync(path, { mimeType: "text/csv", dialogTitle: t("exportCSV") });
-      } else {
-        Alert.alert(t("exportCSV"), t("exportCSVSuccess"));
-      }
+      const month = filterMonth ? `${currentYear}-${filterMonth}` : new Date().toISOString().slice(0, 7);
+      await exportTransactionsCSV({ transactions, month, language });
     } catch {
       Alert.alert(t("error"), t("exportCSVFail"));
     }
