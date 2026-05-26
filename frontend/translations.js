@@ -234,6 +234,20 @@ export const TR = {
     currencyFrom: "จากสกุลเงิน", currencyTo: "เป็นสกุลเงิน",
     currencyAmount: "จำนวน", currencyUpdated: "อัปเดตล่าสุด",
     currencyFail: "โหลดอัตราแลกเปลี่ยนไม่สำเร็จ",
+    // Quick Add
+    quickAdd: "เพิ่มรายการ", quickAddTitle: "เพิ่มรายการด่วน",
+    quickAddAmount: "จำนวนเงิน (฿)", quickAddReceiver: "ร้านค้า / ผู้รับเงิน",
+    quickAddNotePlaceholder: "หมายเหตุ (ไม่บังคับ)",
+    // Month Compare
+    compare: "เปรียบเทียบ", compareTitle: "เปรียบเทียบรายเดือน",
+    compareMonth1: "เดือน A", compareMonth2: "เดือน B (เปรียบเทียบ)",
+    compareRun: "เปรียบเทียบ", compareNoData: "ไม่มีข้อมูลในเดือนที่เลือก",
+    // Privacy Mode
+    privacy: "โหมดความเป็นส่วนตัว",
+    privacyOn: "ปิดบังตัวเลข เปิดอยู่",
+    privacyOff: "ปิดบังตัวเลข ปิดอยู่",
+    // Daily Tip
+    dailyTip: "Tip ประจำวัน",
     // Export CSV (TransactionsScreen)
     exportCSVSuccess: "ไฟล์ CSV พร้อมแชร์", exportCSVFail: "ส่งออก CSV ไม่สำเร็จ",
     // Merchant Analytics
@@ -500,6 +514,20 @@ export const TR = {
     currencyFrom: "From", currencyTo: "To",
     currencyAmount: "Amount", currencyUpdated: "Rates updated",
     currencyFail: "Failed to load exchange rates",
+    // Quick Add
+    quickAdd: "Add Entry", quickAddTitle: "Quick Add Transaction",
+    quickAddAmount: "Amount (฿)", quickAddReceiver: "Merchant / Receiver",
+    quickAddNotePlaceholder: "Note (optional)",
+    // Month Compare
+    compare: "Compare", compareTitle: "Month Comparison",
+    compareMonth1: "Month A", compareMonth2: "Month B (baseline)",
+    compareRun: "Compare", compareNoData: "No data for selected months",
+    // Privacy Mode
+    privacy: "Privacy Mode",
+    privacyOn: "Amounts hidden",
+    privacyOff: "Amounts visible",
+    // Daily Tip
+    dailyTip: "Daily Tip",
     // Export CSV (TransactionsScreen)
     exportCSVSuccess: "CSV file ready to share", exportCSVFail: "CSV export failed",
     // Merchant Analytics

@@ -16,7 +16,7 @@ import { useApp } from "../contexts/AppContext";
 const MONTHS = ["01","02","03","04","05","06","07","08","09","10","11","12"];
 
 export default function TransactionsScreen({ navigation }) {
-  const { colors, t } = useApp();
+  const { colors, t, privacyMode } = useApp();
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -207,7 +207,7 @@ export default function TransactionsScreen({ navigation }) {
                 <View style={s.topRow}>
                   <Text style={s.name} numberOfLines={1}>{item.receiver_name || t("unknownTx")}</Text>
                   <Text style={[s.amount, item.transaction_type === "income" && { color: colors.success }]}>
-                    {item.transaction_type === "income" ? "+" : "-"}฿{item.amount?.toFixed(2) ?? "0.00"}
+                    {item.transaction_type === "income" ? "+" : "-"}{privacyMode ? "฿••••" : `฿${item.amount?.toFixed(2) ?? "0.00"}`}
                   </Text>
                 </View>
                 <Text style={s.bank}>{item.bank_name || t("unspecified")}</Text>

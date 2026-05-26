@@ -16,6 +16,18 @@ from backend.services.csv_parser import parse_bank_csv
 router = APIRouter()
 
 
+class TransactionCreate(BaseModel):
+    amount: float
+    transaction_type: str
+    category: Optional[str] = "other"
+    receiver_name: Optional[str] = None
+    sender_name: Optional[str] = None
+    bank_name: Optional[str] = None
+    transaction_date: Optional[str] = None
+    note: Optional[str] = None
+    tags: Optional[List[str]] = None
+
+
 class TransactionUpdate(BaseModel):
     sender_name: Optional[str] = None
     receiver_name: Optional[str] = None
@@ -42,6 +54,39 @@ def _serialize(item: Transaction) -> dict:
         "tags": json.loads(item.tags) if item.tags else [],
         "created_at": item.created_at.isoformat() if item.created_at else None,
     }
+
+
+@router.post("")
+def create_transaction(
+    data: TransactionCreate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    tx_date = None
+    if data.transaction_date:
+        try:
+            tx_date = datetime.fromisoformat(data.transaction_date)
+        except ValueError:
+            tx_date = None
+    if tx_date is None:
+        tx_date = datetime.utcnow()
+
+    transaction = Transaction(
+        user_id=current_user.id,
+        amount=data.amount,
+        transaction_type=data.transaction_type,
+        category=data.category or "other",
+        receiver_name=data.receiver_name,
+        sender_name=data.sender_name,
+        bank_name=data.bank_name,
+        transaction_date=tx_date,
+        note=data.note,
+        tags=json.dumps(data.tags or []),
+    )
+    db.add(transaction)
+    db.commit()
+    db.refresh(transaction)
+    return _serialize(transaction)
 
 
 @router.get("")

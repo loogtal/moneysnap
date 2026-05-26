@@ -34,6 +34,8 @@ import MonthlyReportScreen from "./screens/MonthlyReportScreen";
 import MerchantScreen from "./screens/MerchantScreen";
 import HealthScreen from "./screens/HealthScreen";
 import ForecastScreen from "./screens/ForecastScreen";
+import QuickAddScreen from "./screens/QuickAddScreen";
+import CompareScreen from "./screens/CompareScreen";
 
 axios.defaults.timeout = 30000;
 
@@ -190,6 +192,8 @@ function AppNavigator() {
         <Stack.Screen name="Merchants" component={MerchantScreen} options={({ navigation }) => ({ title: t("merchantTitle"), headerRight: () => settingsButton(navigation) })} />
         <Stack.Screen name="Health" component={HealthScreen} options={({ navigation }) => ({ title: t("healthTitle"), headerRight: () => settingsButton(navigation) })} />
         <Stack.Screen name="Forecast" component={ForecastScreen} options={({ navigation }) => ({ title: t("forecastScreenTitle"), headerRight: () => settingsButton(navigation) })} />
+        <Stack.Screen name="QuickAdd" component={QuickAddScreen} options={({ navigation }) => ({ title: t("quickAddTitle"), headerRight: () => settingsButton(navigation) })} />
+        <Stack.Screen name="Compare" component={CompareScreen} options={({ navigation }) => ({ title: t("compareTitle"), headerRight: () => settingsButton(navigation) })} />
         <Stack.Screen name="Settings" component={SettingsScreen} options={{ title: t("settings"), headerRight: () => null }} />
       </Stack.Navigator>
     </NavigationContainer>

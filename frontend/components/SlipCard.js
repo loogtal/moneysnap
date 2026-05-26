@@ -4,14 +4,14 @@ import CategoryBadge from "./CategoryBadge";
 import { useApp } from "../contexts/AppContext";
 
 export default function SlipCard({ transaction }) {
-  const { colors, t } = useApp();
+  const { colors, t, privacyMode } = useApp();
   const isIncome = transaction.transaction_type === "income";
   return (
     <View style={[styles.card, { backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border }]}>
       <View style={styles.row}>
         <Text style={[styles.title, { color: colors.text }]}>{transaction.receiver_name || t("unknownTx")}</Text>
         <Text style={[styles.amount, { color: isIncome ? colors.success : colors.danger }]}>
-          {isIncome ? "+" : "-"}฿{transaction.amount?.toFixed(2) || "0.00"}
+          {isIncome ? "+" : "-"}{privacyMode ? "฿••••" : `฿${transaction.amount?.toFixed(2) || "0.00"}`}
         </Text>
       </View>
       <Text style={[styles.subtitle, { color: colors.subtext }]}>{transaction.bank_name || t("unknownBank")}</Text>

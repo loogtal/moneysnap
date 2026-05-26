@@ -48,6 +48,7 @@ export function AppProvider({ children }) {
   const [biometricEnabled, setBiometricEnabledState] = useState(false);
   const [pinEnabled, setPinEnabledState] = useState(false);
   const [pinCode, setPinCodeState] = useState("");
+  const [privacyMode, setPrivacyModeState] = useState(false);
   const [ready, setReady] = useState(false);
   const interceptorRef = useRef(null);
 
@@ -55,7 +56,7 @@ export function AppProvider({ children }) {
   useEffect(() => {
     (async () => {
       try {
-        const [tm, lang, u, token, notif, biometric, pinEn, pinCd] = await Promise.all([
+        const [tm, lang, u, token, notif, biometric, pinEn, pinCd, pm] = await Promise.all([
           AsyncStorage.getItem("themeMode"),
           AsyncStorage.getItem("language"),
           AsyncStorage.getItem("user"),
@@ -64,6 +65,7 @@ export function AppProvider({ children }) {
           AsyncStorage.getItem("biometricEnabled"),
           AsyncStorage.getItem("pin_enabled"),
           AsyncStorage.getItem("pin_code"),
+          AsyncStorage.getItem("privacy_mode"),
         ]);
         if (tm) setThemeMode(tm);
         if (lang) setLanguage(lang);
@@ -75,6 +77,7 @@ export function AppProvider({ children }) {
         if (biometric === "true") setBiometricEnabledState(true);
         if (pinEn === "true") setPinEnabledState(true);
         if (pinCd) setPinCodeState(pinCd);
+        if (pm === "true") setPrivacyModeState(true);
       } catch {}
       setReady(true);
     })();
@@ -190,6 +193,12 @@ export function AppProvider({ children }) {
     }
   }
 
+  async function togglePrivacy() {
+    const next = !privacyMode;
+    setPrivacyModeState(next);
+    await AsyncStorage.setItem("privacy_mode", next ? "true" : "false").catch(() => {});
+  }
+
   async function logout() {
     await _clearSession();
   }
@@ -205,9 +214,9 @@ export function AppProvider({ children }) {
   return (
     <AppContext.Provider value={{
       colors, isDark, themeMode, language, user, notificationsEnabled, biometricEnabled,
-      pinEnabled, pinCode, t,
+      pinEnabled, pinCode, privacyMode, t,
       changeTheme, changeLanguage, login, logout, setNotificationsEnabled, setBiometricEnabled,
-      setPinEnabled, setPinCode,
+      setPinEnabled, setPinCode, togglePrivacy,
     }}>
       {children}
     </AppContext.Provider>

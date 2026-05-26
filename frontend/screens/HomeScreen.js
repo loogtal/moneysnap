@@ -9,6 +9,7 @@ import { API_BASE_URL } from "../config";
 import SpendingChart from "../components/SpendingChart";
 import SlipCard from "../components/SlipCard";
 import { useApp } from "../contexts/AppContext";
+import { TIPS } from "../data/financialTips";
 
 function Avatar({ uri, name, size, colors }) {
   const initial = name ? name.charAt(0).toUpperCase() : "?";
@@ -31,12 +32,15 @@ function Avatar({ uri, name, size, colors }) {
 }
 
 export default function HomeScreen({ navigation }) {
-  const { colors, t, user } = useApp();
+  const { colors, t, user, language, privacyMode, togglePrivacy } = useApp();
   const [summary, setSummary] = useState([]);
   const [recent, setRecent] = useState([]);
   const [loading, setLoading] = useState(true);
   const [todayIncome, setTodayIncome] = useState(0);
   const [todayExpense, setTodayExpense] = useState(0);
+
+  const tips = TIPS[language === "th" ? "th" : "en"];
+  const [tipIdx, setTipIdx] = useState(new Date().getDate() % tips.length);
 
   useEffect(() => {
     axios.get(`${API_BASE_URL.replace("/api", "")}/health`, { timeout: 10000 }).catch(() => {});
@@ -116,14 +120,19 @@ export default function HomeScreen({ navigation }) {
           </Text>
           <Text style={s.greetSub}>{t("thisMonth")}</Text>
         </View>
-        <TouchableOpacity onPress={() => navigation.navigate("Settings")}>
-          <Avatar
-            uri={isGuest ? null : user?.picture}
-            name={user?.name ?? t("guest")}
-            size={44}
-            colors={colors}
-          />
-        </TouchableOpacity>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+          <TouchableOpacity onPress={togglePrivacy} style={{ padding: 6 }}>
+            <Text style={{ fontSize: 20 }}>{privacyMode ? "🙈" : "👁"}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => navigation.navigate("Settings")}>
+            <Avatar
+              uri={isGuest ? null : user?.picture}
+              name={user?.name ?? t("guest")}
+              size={44}
+              colors={colors}
+            />
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Today overview */}
@@ -131,8 +140,8 @@ export default function HomeScreen({ navigation }) {
         <View style={[s.todayCard, { backgroundColor: colors.primary }]}>
           <Text style={s.todayLabel}>{t("todayOverview")}</Text>
           <View style={s.todayRow}>
-            {todayIncome > 0 && <Text style={s.todayNum}>+฿{todayIncome.toFixed(0)}</Text>}
-            {todayExpense > 0 && <Text style={[s.todayNum, { opacity: 0.8 }]}>-฿{todayExpense.toFixed(0)}</Text>}
+            {todayIncome > 0 && <Text style={s.todayNum}>{privacyMode ? "+฿••••" : `+฿${todayIncome.toFixed(0)}`}</Text>}
+            {todayExpense > 0 && <Text style={[s.todayNum, { opacity: 0.8 }]}>{privacyMode ? "-฿••••" : `-฿${todayExpense.toFixed(0)}`}</Text>}
           </View>
         </View>
       )}
@@ -142,18 +151,18 @@ export default function HomeScreen({ navigation }) {
         <View style={s.summaryCard}>
           <View style={s.summaryItem}>
             <Text style={s.summaryLabel}>{t("income")}</Text>
-            <Text style={[s.summaryValue, { color: colors.success }]}>฿{monthIncome.toFixed(0)}</Text>
+            <Text style={[s.summaryValue, { color: colors.success }]}>{privacyMode ? "฿••••" : `฿${monthIncome.toFixed(0)}`}</Text>
           </View>
           <View style={s.summaryDivider} />
           <View style={s.summaryItem}>
             <Text style={s.summaryLabel}>{t("expense")}</Text>
-            <Text style={[s.summaryValue, { color: colors.danger }]}>฿{monthExpense.toFixed(0)}</Text>
+            <Text style={[s.summaryValue, { color: colors.danger }]}>{privacyMode ? "฿••••" : `฿${monthExpense.toFixed(0)}`}</Text>
           </View>
           <View style={s.summaryDivider} />
           <View style={s.summaryItem}>
             <Text style={s.summaryLabel}>{t("net")}</Text>
             <Text style={[s.summaryValue, { color: monthNet >= 0 ? colors.success : colors.danger }]}>
-              {monthNet >= 0 ? "+" : ""}฿{monthNet.toFixed(0)}
+              {privacyMode ? "฿••••" : `${monthNet >= 0 ? "+" : ""}฿${monthNet.toFixed(0)}`}
             </Text>
           </View>
         </View>
@@ -180,6 +189,8 @@ export default function HomeScreen({ navigation }) {
           { label: t("merchants"), icon: "🏪", screen: "Merchants" },
           { label: t("health"), icon: "💪", screen: "Health" },
           { label: t("forecast"), icon: "🔮", screen: "Forecast" },
+          { label: t("quickAdd"), icon: "✍️", screen: "QuickAdd" },
+          { label: t("compare"), icon: "⚖️", screen: "Compare" },
         ].map(({ label, icon, screen }) => (
           <TouchableOpacity
             key={screen}
@@ -196,6 +207,18 @@ export default function HomeScreen({ navigation }) {
         <ActivityIndicator size="large" color={colors.primary} style={s.loader} />
       ) : (
         <>
+          <TouchableOpacity
+            style={s.tipCard}
+            onPress={() => setTipIdx((i) => (i + 1) % tips.length)}
+            activeOpacity={0.85}
+          >
+            <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 6 }}>
+              <Text style={{ fontSize: 14, marginRight: 6 }}>💡</Text>
+              <Text style={s.tipLabel}>{t("dailyTip")}</Text>
+            </View>
+            <Text style={s.tipText}>{tips[tipIdx]}</Text>
+          </TouchableOpacity>
+
           <SpendingChart data={thisMonth} />
           <Text style={s.subheading}>{t("recentTx")}</Text>
           {recent.length === 0 ? (
@@ -240,4 +263,11 @@ const styles = (c) => StyleSheet.create({
   todayLabel: { fontSize: 11, fontWeight: "700", color: "#ffffff99", textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 4 },
   todayRow: { flexDirection: "row", gap: 16 },
   todayNum: { fontSize: 20, fontWeight: "800", color: "#fff" },
+  tipCard: {
+    backgroundColor: c.surface, borderRadius: 12, padding: 14,
+    borderWidth: 1, borderColor: c.border, marginBottom: 16,
+    borderLeftWidth: 3, borderLeftColor: "#f59e0b",
+  },
+  tipLabel: { fontSize: 11, fontWeight: "700", color: "#f59e0b", textTransform: "uppercase", letterSpacing: 0.5 },
+  tipText: { fontSize: 13, color: c.text, lineHeight: 19 },
 });
