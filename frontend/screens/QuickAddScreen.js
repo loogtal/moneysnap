@@ -1,8 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import {
   View, Text, TextInput, TouchableOpacity, ScrollView,
   StyleSheet, Alert, KeyboardAvoidingView, Platform,
 } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useFocusEffect } from "@react-navigation/native";
 import axios from "axios";
 import { API_BASE_URL } from "../config";
 import { useApp } from "../contexts/AppContext";
@@ -19,6 +21,13 @@ export default function QuickAddScreen({ navigation }) {
   const [type, setType] = useState("expense");
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState("other");
+  const [customCats, setCustomCats] = useState([]);
+
+  useFocusEffect(useCallback(() => {
+    AsyncStorage.getItem("custom_categories").then((raw) => {
+      if (raw) setCustomCats(JSON.parse(raw));
+    }).catch(() => {});
+  }, []));
   const [receiver, setReceiver] = useState("");
   const [note, setNote] = useState("");
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
@@ -90,6 +99,16 @@ export default function QuickAddScreen({ navigation }) {
                 >
                   <Text style={s.catIcon}>{CAT_ICONS[cat]}</Text>
                   <Text style={[s.catLabel, category === cat && { color: "#fff" }]}>{t(`cat${cat.charAt(0).toUpperCase() + cat.slice(1)}`)}</Text>
+                </TouchableOpacity>
+              ))}
+              {customCats.map((cat) => (
+                <TouchableOpacity
+                  key={cat.id}
+                  style={[s.catChip, category === cat.name && { backgroundColor: colors.primary, borderColor: colors.primary }]}
+                  onPress={() => setCategory(cat.name)}
+                >
+                  <Text style={s.catIcon}>{cat.emoji}</Text>
+                  <Text style={[s.catLabel, category === cat.name && { color: "#fff" }]}>{cat.name}</Text>
                 </TouchableOpacity>
               ))}
             </View>

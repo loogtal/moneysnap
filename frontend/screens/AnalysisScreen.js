@@ -116,10 +116,10 @@ export default function AnalysisScreen({ navigation }) {
   async function handleExportCSV() {
     setExportingCSV(true);
     try {
-      const month = new Date().toISOString().slice(0, 7);
-      const res = await axios.get(`${API_BASE_URL}/transactions`, { params: { page: 1, page_size: 500 } });
-      const monthTx = (res.data.results || []).filter((tx) => tx.transaction_date?.startsWith(month));
-      await exportTransactionsCSV({ transactions: monthTx, month, language });
+      const now = new Date();
+      const month = now.toISOString().slice(0, 7);
+      const res = await axios.get(`${API_BASE_URL}/transactions`, { params: { page: 1, page_size: 500, year: now.getFullYear(), month: now.getMonth() + 1 } });
+      await exportTransactionsCSV({ transactions: res.data.results || [], month, language });
     } catch {
       Alert.alert(t("error"), t("exportFail"));
     } finally {
@@ -130,10 +130,10 @@ export default function AnalysisScreen({ navigation }) {
   async function handleExportPDF() {
     setExportingPDF(true);
     try {
-      const month = new Date().toISOString().slice(0, 7);
-      const res = await axios.get(`${API_BASE_URL}/transactions`, { params: { page: 1, page_size: 500 } });
-      const monthTx = (res.data.results || []).filter((tx) => tx.transaction_date?.startsWith(month));
-      await exportMonthlyReport({ transactions: monthTx, month, language, userName: user?.name ?? null });
+      const now = new Date();
+      const month = now.toISOString().slice(0, 7);
+      const res = await axios.get(`${API_BASE_URL}/transactions`, { params: { page: 1, page_size: 500, year: now.getFullYear(), month: now.getMonth() + 1 } });
+      await exportMonthlyReport({ transactions: res.data.results || [], month, language, userName: user?.name ?? null });
     } catch {
       Alert.alert(t("error"), t("exportFail"));
     } finally {

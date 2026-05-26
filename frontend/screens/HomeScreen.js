@@ -82,11 +82,13 @@ export default function HomeScreen({ navigation }) {
       prevDate.setMonth(prevDate.getMonth() - 1);
       const prevMonth = prevDate.toISOString().slice(0, 7);
 
+      const CAT_KEYS = { food: "catFood", shopping: "catShopping", transport: "catTransport", bills: "catBills", health: "catHealth", entertainment: "catEntertainment", other: "catOther" };
+
       const [analysisRes, budgetsRes] = await Promise.all([
         axios.get(`${API_BASE_URL}/analysis/monthly`),
         axios.get(`${API_BASE_URL}/budgets`),
       ]);
-      const budgets = budgetsRes.data || [];
+      const budgets = (budgetsRes.data.budgets || []).filter((b) => b.budget != null);
       if (budgets.length === 0) return;
 
       const prevRows = (analysisRes.data.summary || []).filter((r) => r.month === prevMonth && r.transaction_type !== "income");
@@ -95,8 +97,9 @@ export default function HomeScreen({ navigation }) {
 
       const lines = budgets.map((b) => {
         const spent = byCategory[b.category] || 0;
-        const over = spent > b.amount;
-        return `${b.category}: ฿${spent.toFixed(0)} / ฿${b.amount.toFixed(0)} ${over ? t("budgetAlertOver") : t("budgetAlertOk")}`;
+        const over = spent > b.budget;
+        const catName = t(CAT_KEYS[b.category]) || b.category;
+        return `${catName}: ฿${spent.toFixed(0)} / ฿${b.budget.toFixed(0)} ${over ? t("budgetAlertOver") : t("budgetAlertOk")}`;
       });
       if (lines.length > 0) {
         Alert.alert(t("budgetAlertTitle"), lines.join("\n"));

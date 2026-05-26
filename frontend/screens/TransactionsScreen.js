@@ -117,7 +117,7 @@ export default function TransactionsScreen({ navigation }) {
           placeholderTextColor={colors.subtext}
         />
         {search.length > 0 && (
-          <TouchableOpacity onPress={() => { setSearch(""); load("", filterMonth); }}>
+          <TouchableOpacity onPress={() => { setSearch(""); load("", filterMonth, filterTag); }}>
             <Text style={{ color: colors.subtext, fontSize: 16, paddingHorizontal: 6 }}>✕</Text>
           </TouchableOpacity>
         )}

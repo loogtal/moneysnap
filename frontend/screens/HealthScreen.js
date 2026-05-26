@@ -70,17 +70,17 @@ export default function HealthScreen() {
       }
 
       // Budget score (0-30)
-      const budgets = budgetsRes.data || [];
+      const budgets = (budgetsRes.data.budgets || []).filter((b) => b.budget != null);
       let budgetScore = 0;
       if (budgets.length > 0) {
         const byCategory = {};
         thisMonth.filter((r) => r.transaction_type !== "income").forEach((r) => {
           byCategory[r.category] = (byCategory[r.category] || 0) + Number(r.total);
         });
-        const withinBudget = budgets.filter((b) => (byCategory[b.category] || 0) <= b.amount).length;
+        const withinBudget = budgets.filter((b) => (byCategory[b.category] || 0) <= b.budget).length;
         budgetScore = Math.round((withinBudget / budgets.length) * 30);
       } else {
-        budgetScore = 15; // neutral if no budgets set
+        budgetScore = 15;
       }
 
       // Goals score (0-30)

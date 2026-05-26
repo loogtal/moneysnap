@@ -33,8 +33,9 @@ export default function MonthlyReportScreen() {
     setLoading(true);
     setStats(null);
     try {
-      const res = await axios.get(`${API_BASE_URL}/transactions`, { params: { page: 1, page_size: 500 } });
-      const monthTx = (res.data.results || []).filter((tx) => tx.transaction_date?.startsWith(month));
+      const [yearStr, monthStr] = month.split("-");
+      const res = await axios.get(`${API_BASE_URL}/transactions`, { params: { page: 1, page_size: 500, year: parseInt(yearStr), month: parseInt(monthStr) } });
+      const monthTx = res.data.results || [];
       const income = monthTx.filter((tx) => tx.transaction_type === "income").reduce((s, tx) => s + (tx.amount || 0), 0);
       const expense = monthTx.filter((tx) => tx.transaction_type !== "income").reduce((s, tx) => s + (tx.amount || 0), 0);
       const byCategory = {};

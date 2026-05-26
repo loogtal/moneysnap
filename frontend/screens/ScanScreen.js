@@ -25,6 +25,8 @@ export default function ScanScreen({ navigation }) {
 
   const STAGES = [t("stage0"), t("stage1"), t("stage2"), t("stage3")];
 
+  const CAT_KEYS = { food: "catFood", shopping: "catShopping", transport: "catTransport", bills: "catBills", health: "catHealth", entertainment: "catEntertainment", other: "catOther" };
+
   async function checkBudgetWarning(category) {
     if (!category) return;
     try {
@@ -32,16 +34,17 @@ export default function ScanScreen({ navigation }) {
         axios.get(`${API_BASE_URL}/budgets`, { timeout: 10000 }),
         axios.get(`${API_BASE_URL}/analysis/monthly`, { timeout: 10000 }),
       ]);
-      const budget = (budgetsRes.data || []).find((b) => b.category === category);
-      if (!budget || !budget.amount) return;
+      const budget = (budgetsRes.data.budgets || []).find((b) => b.category === category);
+      if (!budget || !budget.budget) return;
       const month = new Date().toISOString().slice(0, 7);
       const row = (analysisRes.data.summary || []).find((r) => r.month === month && r.category === category && r.transaction_type !== "income");
       const spent = row?.total || 0;
-      const pct = spent / budget.amount;
+      const pct = spent / budget.budget;
+      const catName = t(CAT_KEYS[category]) || category;
       if (pct >= 0.8 && pct < 1) {
-        Alert.alert("⚠️ " + t("budgetWarning"), `${category}: ฿${spent.toFixed(0)} / ฿${budget.amount.toFixed(0)} (${Math.round(pct * 100)}%)`);
+        Alert.alert("⚠️ " + t("budgetWarning"), `${catName}: ฿${spent.toFixed(0)} / ฿${budget.budget.toFixed(0)} (${Math.round(pct * 100)}%)`);
       } else if (pct >= 1) {
-        Alert.alert("🚨 " + t("budgetAlertOver"), `${category}: ฿${spent.toFixed(0)} / ฿${budget.amount.toFixed(0)}`);
+        Alert.alert("🚨 " + t("budgetAlertOver"), `${catName}: ฿${spent.toFixed(0)} / ฿${budget.budget.toFixed(0)}`);
       }
     } catch {}
   }
@@ -117,7 +120,6 @@ export default function ScanScreen({ navigation }) {
       } else {
         msg = detail || t("scanFailed");
       }
-      console.warn("Scan error", status, detail);
       Alert.alert(t("scanFailed"), msg);
     } finally {
       stopTimer();
