@@ -15,6 +15,7 @@ export default function SpendingChart({ data = [] }) {
   const { colors, t } = useApp();
 
   const chartData = data
+    .filter((item) => item.transaction_type !== "income")
     .map((item) => ({ x: item.category || "other", y: Number(item.total) || 0 }))
     .filter((item) => item.y > 0);
 

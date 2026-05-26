@@ -126,13 +126,13 @@ const styles = (c) => StyleSheet.create({
   greetText: { fontSize: 22, fontWeight: "800", color: c.text },
   greetSub: { fontSize: 13, color: c.subtext, marginTop: 2 },
   subheading: { fontSize: 18, fontWeight: "600", color: c.text, marginTop: 24, marginBottom: 12 },
-  grid: { flexDirection: "row", flexWrap: "wrap", gap: 10, marginBottom: 20 },
+  grid: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 20 },
   gridBtn: {
-    width: "47%", backgroundColor: c.surface, borderRadius: 12, paddingVertical: 16,
+    width: "31%", backgroundColor: c.surface, borderRadius: 12, paddingVertical: 14,
     alignItems: "center", borderWidth: 1, borderColor: c.border,
   },
-  gridIcon: { fontSize: 28, marginBottom: 6 },
-  gridLabel: { fontSize: 13, fontWeight: "600", color: c.text },
+  gridIcon: { fontSize: 26, marginBottom: 6 },
+  gridLabel: { fontSize: 12, fontWeight: "600", color: c.text, textAlign: "center" },
   loader: { marginTop: 40 },
   empty: { color: c.subtext, fontSize: 15, marginTop: 12 },
 });
