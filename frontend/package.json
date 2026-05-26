@@ -8,6 +8,10 @@
     "ios": "expo start --ios",
     "web": "expo start --web"
   },
+  "overrides": {
+    "expo-constants": "~56.0.15",
+    "expo-application": "~56.0.3"
+  },
   "dependencies": {
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-navigation/native": "^6.1.6",
