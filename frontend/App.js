@@ -18,6 +18,8 @@ import SettingsScreen from "./screens/SettingsScreen";
 import BudgetScreen from "./screens/BudgetScreen";
 import GoalsScreen from "./screens/GoalsScreen";
 import CustomCategoriesScreen from "./screens/CustomCategoriesScreen";
+import RecurringScreen from "./screens/RecurringScreen";
+import DebtScreen from "./screens/DebtScreen";
 
 axios.defaults.timeout = 30000;
 
@@ -139,6 +141,8 @@ function AppNavigator() {
         <Stack.Screen name="Import" component={ImportScreen} options={({ navigation }) => ({ title: t("importCSV"), headerRight: () => settingsButton(navigation) })} />
         <Stack.Screen name="Goals" component={GoalsScreen} options={({ navigation }) => ({ title: t("goalsTitle"), headerRight: () => settingsButton(navigation) })} />
         <Stack.Screen name="CustomCategories" component={CustomCategoriesScreen} options={({ navigation }) => ({ title: t("customCatsTitle"), headerRight: () => settingsButton(navigation) })} />
+        <Stack.Screen name="Recurring" component={RecurringScreen} options={({ navigation }) => ({ title: t("recurringTitle"), headerRight: () => settingsButton(navigation) })} />
+        <Stack.Screen name="Debts" component={DebtScreen} options={({ navigation }) => ({ title: t("debtTitle"), headerRight: () => settingsButton(navigation) })} />
         <Stack.Screen name="Settings" component={SettingsScreen} options={{ title: t("settings"), headerRight: () => null }} />
       </Stack.Navigator>
     </NavigationContainer>

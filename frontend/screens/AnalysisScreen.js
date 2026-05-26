@@ -10,6 +10,7 @@ import SpendingChart from "../components/SpendingChart";
 import { useApp } from "../contexts/AppContext";
 import { exportMonthlyReport } from "../services/pdfExport";
 import { exportTransactionsCSV } from "../services/csvExport";
+import { shareMonthSummary } from "../services/shareSummary";
 
 export default function AnalysisScreen({ navigation }) {
   const { colors, t, language, user } = useApp();
@@ -19,6 +20,7 @@ export default function AnalysisScreen({ navigation }) {
   const [loadingTips, setLoadingTips] = useState(true);
   const [exportingPDF, setExportingPDF] = useState(false);
   const [exportingCSV, setExportingCSV] = useState(false);
+  const [sharingSum, setSharingSum] = useState(false);
   const [weeklyData, setWeeklyData] = useState(null);
   const [loadingWeekly, setLoadingWeekly] = useState(true);
 
@@ -83,6 +85,23 @@ export default function AnalysisScreen({ navigation }) {
     } catch {
     } finally {
       setLoadingWeekly(false);
+    }
+  }
+
+  async function handleShare() {
+    setSharingSum(true);
+    try {
+      const month = new Date().toISOString().slice(0, 7);
+      const rows = summary.filter((r) => r.month === month);
+      const income = rows.filter((r) => r.transaction_type === "income").reduce((s, r) => s + r.total, 0);
+      const expense = rows.filter((r) => r.transaction_type !== "income").reduce((s, r) => s + r.total, 0);
+      const byCategory = {};
+      rows.filter((r) => r.transaction_type !== "income").forEach((r) => { byCategory[r.category] = (byCategory[r.category] || 0) + r.total; });
+      await shareMonthSummary({ month, income, expense, net: income - expense, byCategory, language });
+    } catch {
+      Alert.alert(t("error"), t("exportFail"));
+    } finally {
+      setSharingSum(false);
     }
   }
 
@@ -207,6 +226,36 @@ export default function AnalysisScreen({ navigation }) {
               </View>
             </View>
           ) : null}
+
+          {/* Spending Forecast */}
+          {(() => {
+            const now = new Date();
+            const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+            const dayElapsed = now.getDate();
+            const daysRemaining = daysInMonth - dayElapsed;
+            const last3 = trendData.slice(-4, -1);
+            const avgMonthly = last3.length > 0 ? last3.reduce((s, r) => s + r.expense, 0) / last3.length : 0;
+            const avgDaily = avgMonthly / 30;
+            const currentExpense = thisMonth.filter((r) => r.transaction_type !== "income").reduce((s, r) => s + r.total, 0);
+            const projected = currentExpense + avgDaily * daysRemaining;
+            if (avgMonthly === 0) return null;
+            return (
+              <>
+                <Text style={s.sectionTitle}>{t("forecastTitle")}</Text>
+                <View style={[s.weeklyCard, { flexDirection: "column", gap: 8 }]}>
+                  <Text style={{ fontSize: 11, color: colors.subtext }}>{t("forecastBased")}</Text>
+                  <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+                    <Text style={{ fontSize: 14, color: colors.text, fontWeight: "600" }}>{t("forecastProjected")}</Text>
+                    <Text style={{ fontSize: 20, fontWeight: "800", color: colors.danger }}>฿{projected.toFixed(0)}</Text>
+                  </View>
+                  <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+                    <Text style={{ fontSize: 12, color: colors.subtext }}>{t("forecastDaysLeft")}: {daysRemaining}</Text>
+                    <Text style={{ fontSize: 12, color: colors.subtext }}>{t("spent")}: ฿{currentExpense.toFixed(0)}</Text>
+                  </View>
+                </View>
+              </>
+            );
+          })()}
         </>
       )}
 
@@ -225,6 +274,15 @@ export default function AnalysisScreen({ navigation }) {
         </TouchableOpacity>
         <TouchableOpacity style={s.budgetBtn} onPress={() => navigation.navigate("Budget")}>
           <Text style={s.budgetBtnText}>💰 {t("budget")}</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[s.exportBtn, sharingSum && { opacity: 0.6 }]}
+          onPress={handleShare}
+          disabled={sharingSum}
+        >
+          {sharingSum
+            ? <ActivityIndicator size="small" color={colors.primary} />
+            : <Text style={s.exportText}>📤</Text>}
         </TouchableOpacity>
         <TouchableOpacity
           style={[s.exportBtn, exportingCSV && { opacity: 0.6 }]}
