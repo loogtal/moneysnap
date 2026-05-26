@@ -71,6 +71,8 @@ export const TR = {
     appleSignInFail: "Apple Sign In ไม่สำเร็จ",
     signingIn: "กำลังเข้าสู่ระบบ...",
     loginFailed: "เข้าสู่ระบบไม่สำเร็จ โปรดลองอีกครั้ง",
+    loginFeature1: "สแกนสลิป AI", loginFeature2: "วิเคราะห์ & งบ", loginFeature3: "ฟรี ไม่มีโฆษณา",
+    loginTerms: "การใช้งานถือว่ายอมรับนโยบายความเป็นส่วนตัว",
     // Notifications
     notifications: "การแจ้งเตือน",
     notifToggle: "แจ้งเตือนสรุปรายสัปดาห์",
@@ -351,6 +353,8 @@ export const TR = {
     appleSignInFail: "Apple Sign In failed",
     signingIn: "Signing in...",
     loginFailed: "Sign in failed. Please try again.",
+    loginFeature1: "AI Slip Scan", loginFeature2: "Analysis & Budget", loginFeature3: "Free & No Ads",
+    loginTerms: "By continuing, you agree to our Privacy Policy.",
     // Notifications
     notifications: "Notifications",
     notifToggle: "Weekly spending reminder",

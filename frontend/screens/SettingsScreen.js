@@ -64,7 +64,7 @@ export default function SettingsScreen({ navigation }) {
   const [backupLoading, setBackupLoading] = useState(false);
   const [restoreLoading, setRestoreLoading] = useState(false);
 
-  const BACKUP_KEYS = ["savings_goals", "recurring_subs", "debts", "net_worth_items", "custom_categories"];
+  const BACKUP_KEYS = ["savings_goals", "recurring_subs", "debts", "custom_categories", "wallet_accounts"];
 
   useEffect(() => {
     LocalAuthentication.hasHardwareAsync().then((has) => {

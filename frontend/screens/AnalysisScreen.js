@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   View, Text, TouchableOpacity, ActivityIndicator,
   StyleSheet, ScrollView, Alert,
 } from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
 import axios from "axios";
 import { API_BASE_URL } from "../config";
 import AiTipCard from "../components/AiTipCard";
@@ -26,10 +27,15 @@ export default function AnalysisScreen({ navigation }) {
   const [loadingWeekly, setLoadingWeekly] = useState(true);
 
   useEffect(() => {
-    loadChart();
     loadTips();
-    loadWeekly();
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadChart();
+      loadWeekly();
+    }, [])
+  );
 
   async function loadChart() {
     try {
@@ -229,35 +235,6 @@ export default function AnalysisScreen({ navigation }) {
             </View>
           ) : null}
 
-          {/* Spending Forecast */}
-          {(() => {
-            const now = new Date();
-            const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-            const dayElapsed = now.getDate();
-            const daysRemaining = daysInMonth - dayElapsed;
-            const last3 = trendData.slice(-4, -1);
-            const avgMonthly = last3.length > 0 ? last3.reduce((s, r) => s + r.expense, 0) / last3.length : 0;
-            const avgDaily = avgMonthly / 30;
-            const currentExpense = thisMonth.filter((r) => r.transaction_type !== "income").reduce((s, r) => s + r.total, 0);
-            const projected = currentExpense + avgDaily * daysRemaining;
-            if (avgMonthly === 0) return null;
-            return (
-              <>
-                <Text style={s.sectionTitle}>{t("forecastTitle")}</Text>
-                <View style={[s.weeklyCard, { flexDirection: "column", gap: 8 }]}>
-                  <Text style={{ fontSize: 11, color: colors.subtext }}>{t("forecastBased")}</Text>
-                  <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-                    <Text style={{ fontSize: 14, color: colors.text, fontWeight: "600" }}>{t("forecastProjected")}</Text>
-                    <Text style={{ fontSize: 20, fontWeight: "800", color: colors.danger }}>฿{projected.toFixed(0)}</Text>
-                  </View>
-                  <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-                    <Text style={{ fontSize: 12, color: colors.subtext }}>{t("forecastDaysLeft")}: {daysRemaining}</Text>
-                    <Text style={{ fontSize: 12, color: colors.subtext }}>{t("spent")}: ฿{currentExpense.toFixed(0)}</Text>
-                  </View>
-                </View>
-              </>
-            );
-          })()}
         </>
       )}
 

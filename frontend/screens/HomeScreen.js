@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   View, Text, ScrollView, TouchableOpacity,
   ActivityIndicator, StyleSheet, Image, Alert,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
+import { useFocusEffect } from "@react-navigation/native";
 import { API_BASE_URL } from "../config";
 import SpendingChart from "../components/SpendingChart";
 import SlipCard from "../components/SlipCard";
@@ -41,9 +42,14 @@ export default function HomeScreen({ navigation }) {
 
   useEffect(() => {
     axios.get(`${API_BASE_URL.replace("/api", "")}/health`, { timeout: 10000 }).catch(() => {});
-    loadData();
-    checkBudgetAlert();
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadData();
+      checkBudgetAlert();
+    }, [])
+  );
 
   async function loadData() {
     try {

@@ -129,16 +129,34 @@ export default function LoginScreen() {
 
   const s = styles(colors);
 
+  const features = [
+    { icon: "📷", label: t("loginFeature1") },
+    { icon: "📊", label: t("loginFeature2") },
+    { icon: "💰", label: t("loginFeature3") },
+  ];
+
   return (
     <View style={s.container}>
+      {/* Hero */}
       <View style={s.hero}>
-        <Text style={s.logo}>💰</Text>
+        <View style={[s.logoCircle, { backgroundColor: colors.primary }]}>
+          <Text style={s.logoEmoji}>💳</Text>
+        </View>
         <Text style={s.title}>{t("loginTitle")}</Text>
         <Text style={s.subtitle}>{t("loginSubtitle")}</Text>
+
+        <View style={s.featureRow}>
+          {features.map((f) => (
+            <View key={f.label} style={[s.featurePill, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <Text style={s.featureIcon}>{f.icon}</Text>
+              <Text style={[s.featureLabel, { color: colors.text }]}>{f.label}</Text>
+            </View>
+          ))}
+        </View>
       </View>
 
+      {/* Auth buttons */}
       <View style={s.buttons}>
-        {/* Google */}
         <TouchableOpacity
           style={[s.btn, s.googleBtn, busy && s.disabled]}
           onPress={handleGoogle}
@@ -148,7 +166,6 @@ export default function LoginScreen() {
           <Text style={s.googleText}>{t("signInGoogle")}</Text>
         </TouchableOpacity>
 
-        {/* Apple — only shown on iOS when available */}
         {appleAvailable && (
           <AppleAuthentication.AppleAuthenticationButton
             buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
@@ -159,26 +176,23 @@ export default function LoginScreen() {
           />
         )}
 
-        {/* Guest */}
         <TouchableOpacity
-          style={[s.btn, s.guestBtn]}
+          style={[s.btn, { backgroundColor: colors.primary }, busy && s.disabled]}
           onPress={handleGuest}
           disabled={busy}
         >
-          <Text style={[s.guestText, { color: colors.subtext }]}>
-            {t("continueGuest")}
-          </Text>
+          <Text style={{ color: "#fff", fontSize: 15, fontWeight: "700" }}>{t("continueGuest")}</Text>
         </TouchableOpacity>
-      </View>
 
-      {busy && (
-        <View style={s.busyRow}>
-          <ActivityIndicator color={colors.primary} />
-          <Text style={[s.busyText, { color: colors.subtext }]}>
-            {t("signingIn")}
-          </Text>
-        </View>
-      )}
+        {busy && (
+          <View style={s.busyRow}>
+            <ActivityIndicator color={colors.primary} />
+            <Text style={[s.busyText, { color: colors.subtext }]}>{t("signingIn")}</Text>
+          </View>
+        )}
+
+        <Text style={[s.terms, { color: colors.subtext }]}>{t("loginTerms")}</Text>
+      </View>
     </View>
   );
 }
@@ -188,27 +202,38 @@ const styles = (c) =>
     container: {
       flex: 1, backgroundColor: c.bg,
       justifyContent: "space-between",
-      paddingVertical: 64, paddingHorizontal: 28,
+      paddingVertical: 60, paddingHorizontal: 28,
     },
-    hero: { alignItems: "center", gap: 12 },
-    logo: { fontSize: 72 },
-    title: { fontSize: 32, fontWeight: "800", color: c.text },
-    subtitle: { fontSize: 16, color: c.subtext, textAlign: "center" },
+    hero: { alignItems: "center", gap: 14 },
+    logoCircle: {
+      width: 88, height: 88, borderRadius: 24,
+      alignItems: "center", justifyContent: "center",
+      marginBottom: 4,
+    },
+    logoEmoji: { fontSize: 44 },
+    title: { fontSize: 34, fontWeight: "800", color: c.text, letterSpacing: -0.5 },
+    subtitle: { fontSize: 15, color: c.subtext, textAlign: "center", lineHeight: 22, paddingHorizontal: 8 },
+    featureRow: { flexDirection: "row", gap: 8, flexWrap: "wrap", justifyContent: "center", marginTop: 4 },
+    featurePill: {
+      flexDirection: "row", alignItems: "center", gap: 5,
+      borderRadius: 20, paddingVertical: 6, paddingHorizontal: 12, borderWidth: 1,
+    },
+    featureIcon: { fontSize: 14 },
+    featureLabel: { fontSize: 12, fontWeight: "600" },
     buttons: { gap: 12 },
     btn: {
       flexDirection: "row", alignItems: "center", justifyContent: "center",
-      borderRadius: 12, paddingVertical: 14, gap: 10,
+      borderRadius: 14, paddingVertical: 15, gap: 10,
     },
     disabled: { opacity: 0.6 },
     googleBtn: { backgroundColor: "#fff", borderWidth: 1.5, borderColor: "#ddd" },
     googleIcon: { fontSize: 18, fontWeight: "700", color: "#4285F4" },
     googleText: { fontSize: 16, fontWeight: "600", color: "#333" },
-    appleNativeBtn: { height: 50, width: "100%" },
-    guestBtn: { paddingVertical: 10 },
-    guestText: { fontSize: 14, textDecorationLine: "underline" },
+    appleNativeBtn: { height: 52, width: "100%" },
     busyRow: {
       flexDirection: "row", alignItems: "center",
-      justifyContent: "center", gap: 8, marginTop: 8,
+      justifyContent: "center", gap: 8,
     },
     busyText: { fontSize: 14 },
+    terms: { fontSize: 11, textAlign: "center", lineHeight: 16, marginTop: 4 },
   });
