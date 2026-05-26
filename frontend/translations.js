@@ -122,6 +122,9 @@ export const TR = {
     catNameHint: "ชื่อหมวดหมู่ เช่น สัตว์เลี้ยง",
     catNameRequired: "กรุณาระบุชื่อหมวดหมู่",
     deleteCatConfirm: "ต้องการลบหมวดหมู่นี้?",
+    icon: "ไอคอน",
+    defaultCategories: "หมวดหมู่มาตรฐาน",
+    catName: "ชื่อหมวดหมู่",
     // Weekly Summary
     weeklyTitle: "สรุปรายสัปดาห์",
     weeklySubtitle: "7 วันล่าสุด เทียบกับสัปดาห์ก่อน",
@@ -261,6 +264,9 @@ export const TR = {
     catNameHint: "e.g. Pets, Travel",
     catNameRequired: "Please enter a category name",
     deleteCatConfirm: "Delete this category?",
+    icon: "Icon",
+    defaultCategories: "Default Categories",
+    catName: "Category Name",
     // Weekly Summary
     weeklyTitle: "Weekly Summary",
     weeklySubtitle: "Last 7 days vs previous week",

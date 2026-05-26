@@ -17,9 +17,12 @@ const CAT_KEY = {
 export default function CategoryBadge({ category }) {
   const { t } = useApp();
   const key = category?.toLowerCase() || "other";
+  const isStandard = key in COLORS;
+  const bgColor = isStandard ? COLORS[key] : "#6366f1";
+  const label = isStandard ? t(CAT_KEY[key]) : (category || t("catOther"));
   return (
-    <View style={[styles.badge, { backgroundColor: COLORS[key] || COLORS.other }]}>
-      <Text style={styles.text}>{t(CAT_KEY[key] || "catOther")}</Text>
+    <View style={[styles.badge, { backgroundColor: bgColor }]}>
+      <Text style={styles.text} numberOfLines={1}>{label}</Text>
     </View>
   );
 }

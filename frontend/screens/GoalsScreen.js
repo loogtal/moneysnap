@@ -25,6 +25,9 @@ export default function GoalsScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [editingGoal, setEditingGoal] = useState(null);
   const [form, setForm] = useState({ name: "", target: "", saved: "", deadline: "" });
+  const [addSavingsModal, setAddSavingsModal] = useState(false);
+  const [addSavingsGoalId, setAddSavingsGoalId] = useState(null);
+  const [addSavingsInput, setAddSavingsInput] = useState("");
 
   useFocusEffect(useCallback(() => { loadGoals(); }, []));
 
@@ -67,19 +70,17 @@ export default function GoalsScreen() {
     setModalVisible(false);
   }
 
-  async function addSavings(goal) {
-    Alert.prompt(
-      t("addSavings"),
-      `${t("currentSaved")}: ฿${goal.saved.toFixed(0)}`,
-      async (text) => {
-        const amount = parseFloat(text);
-        if (isNaN(amount) || amount <= 0) return;
-        await saveGoals(goals.map((g) => g.id === goal.id ? { ...g, saved: Math.min(g.saved + amount, g.target) } : g));
-      },
-      "plain-text",
-      "",
-      "decimal-pad",
-    );
+  function openAddSavings(goal) {
+    setAddSavingsGoalId(goal.id);
+    setAddSavingsInput("");
+    setAddSavingsModal(true);
+  }
+
+  async function confirmAddSavings() {
+    const amount = parseFloat(addSavingsInput);
+    if (isNaN(amount) || amount <= 0) { Alert.alert(t("error"), t("invalidAmount")); return; }
+    await saveGoals(goals.map((g) => g.id === addSavingsGoalId ? { ...g, saved: Math.min(g.saved + amount, g.target) } : g));
+    setAddSavingsModal(false);
   }
 
   async function deleteGoal(id) {
@@ -130,7 +131,7 @@ export default function GoalsScreen() {
 
               <View style={s.actions}>
                 {!done && (
-                  <TouchableOpacity style={s.addBtn} onPress={() => addSavings(goal)}>
+                  <TouchableOpacity style={s.addBtn} onPress={() => openAddSavings(goal)}>
                     <Text style={s.addBtnText}>+ {t("addSavings")}</Text>
                   </TouchableOpacity>
                 )}
@@ -149,6 +150,32 @@ export default function GoalsScreen() {
       <TouchableOpacity style={[s.fab, { backgroundColor: colors.primary }]} onPress={openNew}>
         <Text style={s.fabText}>+ {t("addGoal")}</Text>
       </TouchableOpacity>
+
+      <Modal visible={addSavingsModal} animationType="slide" transparent>
+        <View style={s.overlay}>
+          <View style={[s.modal, { backgroundColor: colors.surface }]}>
+            <Text style={s.modalTitle}>{t("addSavings")}</Text>
+            <Text style={s.fieldLabel}>{t("amount")} (฿)</Text>
+            <TextInput
+              style={s.input}
+              value={addSavingsInput}
+              onChangeText={setAddSavingsInput}
+              keyboardType="decimal-pad"
+              placeholder="0"
+              placeholderTextColor={colors.subtext}
+              autoFocus
+            />
+            <View style={s.modalBtns}>
+              <TouchableOpacity style={s.cancelBtn} onPress={() => setAddSavingsModal(false)}>
+                <Text style={{ color: colors.subtext, fontWeight: "600" }}>{t("cancel")}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[s.saveBtn, { backgroundColor: colors.primary }]} onPress={confirmAddSavings}>
+                <Text style={{ color: "#fff", fontWeight: "700" }}>{t("save")}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       <Modal visible={modalVisible} animationType="slide" transparent>
         <View style={s.overlay}>

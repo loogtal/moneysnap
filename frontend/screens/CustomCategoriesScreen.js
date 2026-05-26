@@ -71,7 +71,7 @@ export default function CustomCategoriesScreen() {
         <Text style={s.heading}>{t("customCatsTitle")}</Text>
         <Text style={s.subtitle}>{t("customCatsSubtitle")}</Text>
 
-        <Text style={s.sectionLabel}>หมวดหมู่มาตรฐาน</Text>
+        <Text style={s.sectionLabel}>{t("defaultCategories")}</Text>
         <View style={s.defaultGrid}>
           {DEFAULT_CATS.map((cat) => {
             const catKey = `cat${cat.key.charAt(0).toUpperCase()}${cat.key.slice(1)}`;
@@ -109,7 +109,7 @@ export default function CustomCategoriesScreen() {
           <View style={[s.modal, { backgroundColor: colors.surface }]}>
             <Text style={s.modalTitle}>{t("addCategory")}</Text>
 
-            <Text style={s.fieldLabel}>{t("goalName").replace("เป้าหมาย", "หมวดหมู่").replace("Goal ", "")}</Text>
+            <Text style={s.fieldLabel}>{t("catName")}</Text>
             <TextInput
               style={s.input}
               value={catName}
@@ -119,7 +119,7 @@ export default function CustomCategoriesScreen() {
               autoFocus
             />
 
-            <Text style={s.fieldLabel}>ไอคอน</Text>
+            <Text style={s.fieldLabel}>{t("icon")}</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 16 }}>
               <View style={{ flexDirection: "row", gap: 8 }}>
                 {["🏷️", ...EMOJI_OPTIONS].map((em) => (
