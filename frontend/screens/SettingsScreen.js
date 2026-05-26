@@ -77,7 +77,7 @@ export default function SettingsScreen({ navigation }) {
       if (enabled) {
         const granted = await requestPermission();
         if (!granted) {
-          Alert.alert(t("notifications"), t("needCamera").replace("Camera", "Notification").replace("กล้อง", "การแจ้งเตือน"));
+          Alert.alert(t("notifications"), t("notifPermissionRequired"));
           return;
         }
         await scheduleWeeklyReminder(t("notifWeeklyTitle"), t("notifWeeklyBody"));

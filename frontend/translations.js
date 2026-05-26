@@ -74,6 +74,7 @@ export const TR = {
     // Notifications
     notifications: "การแจ้งเตือน",
     notifToggle: "แจ้งเตือนสรุปรายสัปดาห์",
+    notifPermissionRequired: "กรุณาอนุญาตการแจ้งเตือนในการตั้งค่าของอุปกรณ์",
     notifScanTitle: "สแกนสำเร็จ ✅",
     notifWeeklyTitle: "สรุปการใช้จ่ายสัปดาห์นี้ 💰",
     notifWeeklyBody: "เปิด MoneySnap เพื่อดูสรุปการใช้จ่ายของคุณ",
@@ -216,6 +217,7 @@ export const TR = {
     // Notifications
     notifications: "Notifications",
     notifToggle: "Weekly spending reminder",
+    notifPermissionRequired: "Please allow notifications in your device settings",
     notifScanTitle: "Scan Successful ✅",
     notifWeeklyTitle: "Weekly Spending Summary 💰",
     notifWeeklyBody: "Open MoneySnap to review your spending.",

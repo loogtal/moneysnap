@@ -50,14 +50,20 @@ export default function BudgetScreen() {
     }
   }
 
+  function catLabel(category) {
+    const key = `cat${category.charAt(0).toUpperCase()}${category.slice(1)}`;
+    const translated = t(key);
+    return translated !== key ? translated : category;
+  }
+
   function checkBudgetAlerts(data) {
     const overBudget = data.filter((b) => b.budget && b.percent >= 100);
     const nearBudget = data.filter((b) => b.budget && b.percent >= 80 && b.percent < 100);
     if (overBudget.length > 0) {
-      const cats = overBudget.map((b) => t(`cat${b.category.charAt(0).toUpperCase()}${b.category.slice(1)}`)).join(", ");
-      sendScanSuccess("⚠️ เกินงบประมาณ!", `${cats} — ใช้เกินงบแล้ว`);
+      const cats = overBudget.map((b) => catLabel(b.category)).join(", ");
+      sendScanSuccess("⚠️ " + t("budgetTitle"), `${cats} — ${t("budgetWarning")}`);
     } else if (nearBudget.length > 0) {
-      const cats = nearBudget.map((b) => t(`cat${b.category.charAt(0).toUpperCase()}${b.category.slice(1)}`)).join(", ");
+      const cats = nearBudget.map((b) => catLabel(b.category)).join(", ");
       sendScanSuccess("💰 " + t("budgetWarning"), cats);
     }
   }
@@ -114,14 +120,14 @@ export default function BudgetScreen() {
       {budgets.map((item) => {
         const isEditing = editing === item.category;
         const hasBudget = item.budget != null;
-        const catKey = `cat${item.category.charAt(0).toUpperCase()}${item.category.slice(1)}`;
+        const displayName = catLabel(item.category);
 
         return (
           <View key={item.category} style={s.card}>
             <View style={s.cardHeader}>
               <Text style={s.catIcon}>{CAT_ICONS[item.category] ?? "📦"}</Text>
               <View style={{ flex: 1 }}>
-                <Text style={s.catName}>{t(catKey)}</Text>
+                <Text style={s.catName}>{displayName}</Text>
                 <Text style={s.spentText}>
                   {t("spent")}: ฿{item.spent.toFixed(0)}
                   {hasBudget ? ` / ฿${item.budget.toFixed(0)}` : ""}
