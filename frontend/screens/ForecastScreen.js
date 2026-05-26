@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useCallback } from "react";
 import {
   View, Text, ScrollView, ActivityIndicator, StyleSheet,
 } from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
 import axios from "axios";
 import { API_BASE_URL } from "../config";
 import { useApp } from "../contexts/AppContext";
@@ -18,7 +19,7 @@ function StatBox({ label, value, color, colors }) {
   );
 }
 
-function ProgressBar({ current, projected, income, colors }) {
+function ProgressBar({ current, projected, income, incomeLabel, colors }) {
   const cap = Math.max(income, projected, current, 1);
   const spentPct = Math.min(100, Math.round((current / cap) * 100));
   const projPct = Math.min(100, Math.round((projected / cap) * 100));
@@ -35,7 +36,7 @@ function ProgressBar({ current, projected, income, colors }) {
       </View>
       <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
         <Text style={{ fontSize: 10, color: colors.subtext }}>฿0</Text>
-        {income > 0 && <Text style={{ fontSize: 10, color: colors.success }}>Income ฿{income.toFixed(0)}</Text>}
+        {income > 0 && <Text style={{ fontSize: 10, color: colors.success }}>{incomeLabel} ฿{income.toFixed(0)}</Text>}
         <Text style={{ fontSize: 10, color: colors.subtext }}>฿{Math.round(cap).toFixed(0)}</Text>
       </View>
     </View>
@@ -47,24 +48,21 @@ export default function ForecastScreen() {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState(null);
 
-  useEffect(() => { load(); }, []);
+  useFocusEffect(useCallback(() => { load(); }, []));
 
   async function load() {
+    setLoading(true);
     try {
       const now = new Date();
-      const month = now.toISOString().slice(0, 7);
       const dayElapsed = now.getDate();
       const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
       const daysLeft = daysInMonth - dayElapsed;
 
-      const [txRes, analysisRes] = await Promise.all([
-        axios.get(`${API_BASE_URL}/transactions`, { params: { page_size: 500 } }),
-        axios.get(`${API_BASE_URL}/analysis/monthly`),
-      ]);
+      const txRes = await axios.get(`${API_BASE_URL}/transactions`, {
+        params: { page_size: 500, year: now.getFullYear(), month: now.getMonth() + 1 },
+      });
 
-      const thisMonthTxs = (txRes.data.results || []).filter(
-        (tx) => tx.transaction_date?.slice(0, 7) === month
-      );
+      const thisMonthTxs = txRes.data.results || [];
       const expense = thisMonthTxs
         .filter((tx) => tx.transaction_type !== "income")
         .reduce((s, tx) => s + (tx.amount || 0), 0);
@@ -115,6 +113,7 @@ export default function ForecastScreen() {
         current={data.expense}
         projected={data.projected}
         income={data.income}
+        incomeLabel={t("income")}
         colors={colors}
       />
 

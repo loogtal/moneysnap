@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   View, Text, TouchableOpacity, StyleSheet,
   ScrollView, ActivityIndicator,
 } from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
 import axios from "axios";
 import { API_BASE_URL } from "../config";
 import { useApp } from "../contexts/AppContext";
@@ -23,15 +24,15 @@ export default function CalendarScreen() {
 
   const monthStr = `${year}-${String(month + 1).padStart(2, "0")}`;
 
-  useEffect(() => {
-    setSelectedDate(null);
-    load();
-  }, [year, month]);
+  useEffect(() => { setSelectedDate(null); }, [year, month]);
+  useFocusEffect(useCallback(() => { load(); }, [year, month]));
 
   async function load() {
     setLoading(true);
     try {
-      const res = await axios.get(`${API_BASE_URL}/transactions`, { params: { page: 1, page_size: 500 } });
+      const res = await axios.get(`${API_BASE_URL}/transactions`, {
+        params: { page: 1, page_size: 500, year, month: month + 1 },
+      });
       const all = res.data.results || [];
       const map = {};
       all.forEach((tx) => {
@@ -131,10 +132,10 @@ export default function CalendarScreen() {
                   <View key={tx.id} style={s.txRow}>
                     <View style={{ flex: 1 }}>
                       <Text style={{ fontSize: 14, color: colors.text }} numberOfLines={1}>
-                        {tx.receiver || tx.sender || t("unknownTx")}
+                        {tx.receiver_name || tx.sender_name || t("unknownTx")}
                       </Text>
                       {tx.category ? (
-                        <Text style={{ fontSize: 11, color: colors.subtext }}>{tx.category}</Text>
+                        <Text style={{ fontSize: 11, color: colors.subtext }}>{t(`cat${tx.category.charAt(0).toUpperCase() + tx.category.slice(1)}`) || tx.category}</Text>
                       ) : null}
                     </View>
                     <Text style={{

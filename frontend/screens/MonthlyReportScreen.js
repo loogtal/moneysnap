@@ -112,17 +112,22 @@ export default function MonthlyReportScreen() {
           {topCategories.length > 0 && (
             <View style={[s.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
               <Text style={s.cardTitle}>{t("spendingByCategory")}</Text>
-              {topCategories.map(([cat, amt]) => (
+              {topCategories.map(([cat, amt]) => {
+                const catKey = `cat${cat.charAt(0).toUpperCase() + cat.slice(1)}`;
+                const catTr = t(catKey);
+                const catDisplay = catTr !== catKey ? catTr : cat;
+                return (
                 <View key={cat} style={{ marginBottom: 10 }}>
                   <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 4 }}>
-                    <Text style={{ fontSize: 13, color: colors.text, fontWeight: "600" }}>{cat}</Text>
+                    <Text style={{ fontSize: 13, color: colors.text, fontWeight: "600" }}>{catDisplay}</Text>
                     <Text style={{ fontSize: 13, color: colors.danger }}>฿{amt.toFixed(0)}</Text>
                   </View>
                   <View style={{ height: 6, backgroundColor: colors.border, borderRadius: 3 }}>
                     <View style={{ width: `${(amt / maxCat) * 100}%`, height: 6, backgroundColor: colors.danger, borderRadius: 3 }} />
                   </View>
                 </View>
-              ))}
+                );
+              })}
             </View>
           )}
 

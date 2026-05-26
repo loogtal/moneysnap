@@ -50,6 +50,12 @@ function CompareRow({ label, valA, valB, colorA, colorB, invertGood }) {
   );
 }
 
+function catLabel(cat, t) {
+  const key = `cat${cat.charAt(0).toUpperCase() + cat.slice(1)}`;
+  const tr = t(key);
+  return tr !== key ? tr : cat;
+}
+
 export default function CompareScreen() {
   const { colors, t, language } = useApp();
   const [monthA, setMonthA] = useState(MONTHS[0]);
@@ -151,7 +157,7 @@ export default function CompareScreen() {
               <View style={s.card}>
                 {allCats.map((cat) => (
                   <CompareRow
-                    key={cat} label={cat}
+                    key={cat} label={catLabel(cat, t)}
                     valA={result.a.byCategory[cat] || 0}
                     valB={result.b.byCategory[cat] || 0}
                     colorA={colors.danger} colorB={colors.danger}

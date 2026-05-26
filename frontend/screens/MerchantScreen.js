@@ -1,20 +1,22 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useCallback } from "react";
 import {
   View, Text, ScrollView, ActivityIndicator, StyleSheet, TouchableOpacity,
 } from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
 import axios from "axios";
 import { API_BASE_URL } from "../config";
 import { useApp } from "../contexts/AppContext";
 
 export default function MerchantScreen() {
-  const { colors, t } = useApp();
+  const { colors, t, language } = useApp();
   const [merchants, setMerchants] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState(null);
 
-  useEffect(() => { load(); }, []);
+  useFocusEffect(useCallback(() => { load(); }, []));
 
   async function load() {
+    setLoading(true);
     try {
       const res = await axios.get(`${API_BASE_URL}/transactions`, { params: { page_size: 500 } });
       const txs = (res.data.results || []).filter(
@@ -84,7 +86,7 @@ export default function MerchantScreen() {
                   </View>
                 ))}
                 {m.txs.length > 5 && (
-                  <Text style={{ color: colors.subtext, fontSize: 11, marginTop: 4 }}>+{m.txs.length - 5} more</Text>
+                  <Text style={{ color: colors.subtext, fontSize: 11, marginTop: 4 }}>+{m.txs.length - 5} {language === "th" ? "รายการ" : "more"}</Text>
                 )}
               </View>
             )}

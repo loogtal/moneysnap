@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useCallback } from "react";
 import {
   View, Text, ScrollView, ActivityIndicator, StyleSheet,
 } from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { API_BASE_URL } from "../config";
@@ -44,9 +45,10 @@ export default function HealthScreen() {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState(null);
 
-  useEffect(() => { load(); }, []);
+  useFocusEffect(useCallback(() => { load(); }, []));
 
   async function load() {
+    setLoading(true);
     try {
       const month = new Date().toISOString().slice(0, 7);
       const [analysisRes, budgetsRes, goalsRaw] = await Promise.all([
