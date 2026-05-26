@@ -67,7 +67,7 @@ const lockStyles = StyleSheet.create({
 
 function AppNavigator() {
   const { user, colors, isDark, t, biometricEnabled } = useApp();
-  const [locked, setLocked] = useState(false);
+  const [locked, setLocked] = useState(biometricEnabled);
   const appState = useRef(AppState.currentState);
 
   // Lock when app goes to background
