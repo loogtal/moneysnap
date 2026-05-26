@@ -29,10 +29,11 @@ function makeGuestId() {
 
 const AppContext = createContext({
   colors: LIGHT, isDark: false, themeMode: "auto",
-  language: "th", user: null,
+  language: "th", user: null, notificationsEnabled: false,
   t: (k) => k,
   changeTheme: () => {}, changeLanguage: () => {},
   login: async () => {}, logout: async () => {},
+  setNotificationsEnabled: async () => {},
 });
 
 export function AppProvider({ children }) {
@@ -40,6 +41,7 @@ export function AppProvider({ children }) {
   const [themeMode, setThemeMode] = useState("auto");
   const [language, setLanguage] = useState("th");
   const [user, setUser] = useState(null);
+  const [notificationsEnabled, setNotifEnabled] = useState(false);
   const [ready, setReady] = useState(false);
   const interceptorRef = useRef(null);
 
@@ -47,11 +49,12 @@ export function AppProvider({ children }) {
   useEffect(() => {
     (async () => {
       try {
-        const [tm, lang, u, token] = await Promise.all([
+        const [tm, lang, u, token, notif] = await Promise.all([
           AsyncStorage.getItem("themeMode"),
           AsyncStorage.getItem("language"),
           AsyncStorage.getItem("user"),
           AsyncStorage.getItem("authToken"),
+          AsyncStorage.getItem("notificationsEnabled"),
         ]);
         if (tm) setThemeMode(tm);
         if (lang) setLanguage(lang);
@@ -59,6 +62,7 @@ export function AppProvider({ children }) {
         if (token) {
           axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
         }
+        if (notif === "true") setNotifEnabled(true);
       } catch {}
       setReady(true);
     })();
@@ -150,6 +154,11 @@ export function AppProvider({ children }) {
     }
   }
 
+  async function setNotificationsEnabled(enabled) {
+    setNotifEnabled(enabled);
+    await AsyncStorage.setItem("notificationsEnabled", String(enabled)).catch(() => {});
+  }
+
   async function logout() {
     await _clearSession();
   }
@@ -164,8 +173,8 @@ export function AppProvider({ children }) {
 
   return (
     <AppContext.Provider value={{
-      colors, isDark, themeMode, language, user, t,
-      changeTheme, changeLanguage, login, logout,
+      colors, isDark, themeMode, language, user, notificationsEnabled, t,
+      changeTheme, changeLanguage, login, logout, setNotificationsEnabled,
     }}>
       {children}
     </AppContext.Provider>

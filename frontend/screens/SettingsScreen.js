@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react";
 import {
   View, Text, TouchableOpacity, StyleSheet,
-  ScrollView, Alert, Image, ActivityIndicator,
+  ScrollView, Alert, Image, ActivityIndicator, Switch,
 } from "react-native";
 import axios from "axios";
 import { API_BASE_URL } from "../config";
 import { useApp } from "../contexts/AppContext";
+import { requestPermission, scheduleWeeklyReminder, cancelWeeklyReminder } from "../services/notifications";
 
 const PROVIDER_LABEL = { google: "Google", apple: "Apple ID", guest: "Guest" };
 
@@ -43,9 +44,10 @@ function Divider({ colors }) {
 }
 
 export default function SettingsScreen() {
-  const { colors, themeMode, language, user, t, changeTheme, changeLanguage, logout } = useApp();
+  const { colors, themeMode, language, user, t, changeTheme, changeLanguage, logout, notificationsEnabled, setNotificationsEnabled } = useApp();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [togglingNotif, setTogglingNotif] = useState(false);
   const s = styles(colors);
 
   useEffect(() => {
@@ -60,6 +62,26 @@ export default function SettingsScreen() {
       // offline — use local user data
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleNotifToggle(enabled) {
+    setTogglingNotif(true);
+    try {
+      if (enabled) {
+        const granted = await requestPermission();
+        if (!granted) {
+          Alert.alert(t("notifications"), t("needCamera").replace("Camera", "Notification").replace("กล้อง", "การแจ้งเตือน"));
+          return;
+        }
+        await scheduleWeeklyReminder(t("notifWeeklyTitle"), t("notifWeeklyBody"));
+        await setNotificationsEnabled(true);
+      } else {
+        await cancelWeeklyReminder();
+        await setNotificationsEnabled(false);
+      }
+    } finally {
+      setTogglingNotif(false);
     }
   }
 
@@ -148,6 +170,23 @@ export default function SettingsScreen() {
           onChange={changeLanguage}
           colors={colors}
         />
+      </Section>
+
+      {/* Notifications */}
+      <Section label={t("notifications")} colors={colors}>
+        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+          <Text style={{ fontSize: 14, color: colors.text, flex: 1 }}>{t("notifToggle")}</Text>
+          {togglingNotif ? (
+            <ActivityIndicator size="small" color={colors.primary} />
+          ) : (
+            <Switch
+              value={notificationsEnabled}
+              onValueChange={handleNotifToggle}
+              trackColor={{ false: colors.border, true: colors.primary }}
+              thumbColor="#ffffff"
+            />
+          )}
+        </View>
       </Section>
 
       {/* Theme */}

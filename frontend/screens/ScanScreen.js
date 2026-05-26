@@ -8,11 +8,12 @@ import axios from "axios";
 import { API_BASE_URL } from "../config";
 import CategoryBadge from "../components/CategoryBadge";
 import { useApp } from "../contexts/AppContext";
+import { sendScanSuccess } from "../services/notifications";
 
 const BASE_URL = API_BASE_URL.replace("/api", "");
 
 export default function ScanScreen({ navigation }) {
-  const { colors, t } = useApp();
+  const { colors, t, notificationsEnabled } = useApp();
   const [image, setImage] = useState(null);
   const [loading, setLoading] = useState(false);
   const [stage, setStage] = useState(0);
@@ -68,6 +69,10 @@ export default function ScanScreen({ navigation }) {
         timeout: 120000,
       });
       setResult(res.data);
+      if (notificationsEnabled) {
+        const amt = res.data.amount?.toFixed(2) ?? "0.00";
+        sendScanSuccess(t("notifScanTitle"), `฿${amt}`);
+      }
     } catch (err) {
       const status = err?.response?.status;
       const detail = err?.response?.data?.detail ?? err?.message ?? "";

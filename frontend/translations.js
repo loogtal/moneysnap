@@ -71,6 +71,16 @@ export const TR = {
     appleSignInFail: "Apple Sign In ไม่สำเร็จ",
     signingIn: "กำลังเข้าสู่ระบบ...",
     loginFailed: "เข้าสู่ระบบไม่สำเร็จ โปรดลองอีกครั้ง",
+    // Notifications
+    notifications: "การแจ้งเตือน",
+    notifToggle: "แจ้งเตือนสรุปรายสัปดาห์",
+    notifScanTitle: "สแกนสำเร็จ ✅",
+    notifWeeklyTitle: "สรุปการใช้จ่ายสัปดาห์นี้ 💰",
+    notifWeeklyBody: "เปิด MoneySnap เพื่อดูสรุปการใช้จ่ายของคุณ",
+    // Export
+    exportPDF: "ออกรายงาน PDF",
+    exportPreparing: "กำลังสร้างรายงาน...",
+    exportFail: "ส่งออกไม่สำเร็จ",
     // Errors
     error: "ข้อผิดพลาด", loadFailed: "โหลดข้อมูลไม่สำเร็จ",
     saveFailed: "บันทึกไม่สำเร็จ โปรดลองอีกครั้ง",
@@ -152,6 +162,16 @@ export const TR = {
     appleSignInFail: "Apple Sign In failed",
     signingIn: "Signing in...",
     loginFailed: "Sign in failed. Please try again.",
+    // Notifications
+    notifications: "Notifications",
+    notifToggle: "Weekly spending reminder",
+    notifScanTitle: "Scan Successful ✅",
+    notifWeeklyTitle: "Weekly Spending Summary 💰",
+    notifWeeklyBody: "Open MoneySnap to review your spending.",
+    // Export
+    exportPDF: "Export PDF Report",
+    exportPreparing: "Preparing report...",
+    exportFail: "Export failed",
     // Errors
     error: "Error", loadFailed: "Failed to load data",
     saveFailed: "Save failed. Please try again",
